@@ -1,0 +1,4997 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>ファイナルファンタジータクティクス 五等分の花嫁</title>
+<style>
+  :root {
+    --bg-outer: #090b10;
+    --bg-frame: #111622;
+    --panel-bg: rgba(16, 22, 36, 0.94);
+    --panel-border: #5c76a3;
+    --gold: #f5d076;
+    --gold-dim: #9d8242;
+    --text-main: #f4f7fb;
+    --text-sub: #a9b8d1;
+    --hp-green: #38d977;
+    --hp-mid: #f2b705;
+    --hp-low: #ff4d5a;
+    --mp-blue: #4da6ff;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 20%, #192236 0%, var(--bg-outer) 75%);
+    color: var(--text-main);
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #app-shell {
+    position: relative;
+    width: min(100vw, calc(100dvh * 9 / 16));
+    height: min(100dvh, calc(100vw * 16 / 9));
+    max-width: 100vw;
+    max-height: 100dvh;
+    background: var(--bg-frame);
+    border: 1px solid rgba(130, 160, 215, 0.28);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: max(6px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
+  }
+
+  @media (min-width: 700px) {
+    #app-shell {
+      border-radius: 14px;
+    }
+  }
+
+  #top-hud {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 20;
+    padding: 0 4px;
+  }
+
+  #system-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    min-height: 28px;
+  }
+
+  #stage-badge {
+    font-size: clamp(10px, 1.3vw, 11.5px);
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(12, 17, 29, 0.9);
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    padding: 3px 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 44%;
+  }
+
+  #sys-btn-group {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .sys-btn {
+    background: rgba(24, 34, 56, 0.95);
+    color: var(--text-main);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: clamp(9.5px, 1.15vw, 10.5px);
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .sys-btn:active { transform: scale(0.96); background: #2d416b; }
+  .sys-btn.danger { border-color: #b84452; color: #ff9aa3; }
+  .sys-btn.active { border-color: var(--gold); color: var(--gold); }
+  .sys-btn.help-btn { border-color: #67e8f9; color: #a5f3fc; }
+
+  #at-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(10, 15, 26, 0.92);
+    border: 1px solid rgba(115, 145, 198, 0.45);
+    border-radius: 8px;
+    padding: 3px 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #at-bar::-webkit-scrollbar { display: none; }
+
+  .at-chip {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(28, 38, 60, 0.85);
+    border: 1px solid rgba(130, 160, 210, 0.3);
+    font-size: 10px;
+    font-weight: 700;
+    position: relative;
+  }
+  .at-chip.now {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(245, 208, 118, 0.55);
+    background: rgba(65, 54, 24, 0.9);
+  }
+  .at-chip.ally { border-left: 3px solid #49d17d; }
+  .at-chip.enemy { border-left: 3px solid #ff5c6c; }
+  .at-chip.ko { opacity: 0.78; border-color: #ff9d42; }
+  .at-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .at-ct {
+    color: var(--gold);
+    font-size: 9px;
+  }
+
+  #battle-viewport {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(125, 155, 210, 0.45);
+    overflow: hidden;
+    background: #0d1320;
+    touch-action: none;
+  }
+
+  #game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #cam-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 12;
+  }
+
+  .cam-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(14, 20, 34, 0.86);
+    border: 1px solid rgba(140, 170, 224, 0.55);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  }
+  .cam-btn:active { transform: scale(0.94); background: #26385e; }
+
+  #zoom-pill {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(12, 18, 30, 0.84);
+    border: 1px solid rgba(130, 160, 210, 0.4);
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-sub);
+    z-index: 12;
+    pointer-events: none;
+  }
+
+  #skill-cast-banner {
+    position: absolute;
+    top: 44px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background: linear-gradient(90deg, rgba(16, 23, 40, 0.96), rgba(34, 28, 54, 0.96), rgba(16, 23, 40, 0.96));
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 6px 12px;
+    z-index: 16;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.72);
+    max-width: 92%;
+    text-align: center;
+  }
+  #skill-cast-banner.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .cast-title {
+    font-size: 12.5px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+  .cast-desc {
+    font-size: 10.5px;
+    color: var(--text-main);
+    margin-top: 2px;
+    line-height: 1.35;
+  }
+
+  #toast-banner {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    background: rgba(12, 16, 28, 0.94);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: clamp(11px, 1.4vw, 13px);
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    max-width: 92%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  }
+  #toast-banner.show { opacity: 1; }
+
+  #bottom-hud {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 4px;
+    z-index: 20;
+  }
+
+  #active-unit-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 6px 9px;
+  }
+
+  .unit-portrait-mini {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.25);
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    background: #1c273d;
+    position: relative;
+  }
+
+  .unit-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .unit-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: clamp(12px, 1.5vw, 14px);
+    font-weight: 800;
+    flex-wrap: wrap;
+  }
+  .job-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(245, 208, 118, 0.14);
+    border: 1px solid rgba(245, 208, 118, 0.38);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .buff-tag {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #fde047;
+    background: rgba(234, 179, 8, 0.2);
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .mount-tag {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #7dd3fc;
+    background: rgba(56, 189, 248, 0.18);
+    border: 1px solid rgba(125, 211, 252, 0.5);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .gauge-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .gauge-box {
+    flex: 1 1 0;
+  }
+  .bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+  .bar-fill {
+    height: 100%;
+    transition: width 0.2s ease;
+  }
+
+  .sub-stats {
+    text-align: right;
+    font-size: 10px;
+    color: var(--text-sub);
+    line-height: 1.35;
+    flex: 0 0 auto;
+  }
+  .sub-stats strong { color: var(--text-main); }
+
+  #control-deck {
+    display: grid;
+    grid-template-columns: 1.25fr 0.95fr;
+    gap: 6px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 6px;
+  }
+
+  #cmd-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 112px;
+    max-height: 142px;
+    overflow-y: auto;
+  }
+
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .cmd-btn {
+    background: linear-gradient(180deg, #243557 0%, #19253d 100%);
+    border: 1px solid #6b88bd;
+    border-radius: 6px;
+    color: var(--text-main);
+    padding: 5px 6px;
+    font-size: clamp(10.5px, 1.3vw, 12px);
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cmd-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+  .cmd-btn:active:not(:disabled) { transform: scale(0.97); }
+  .cmd-btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    border-color: #41516e;
+  }
+  .cmd-btn.primary {
+    border-color: var(--gold-dim);
+    background: linear-gradient(180deg, #372f1c 0%, #221d12 100%);
+  }
+
+  .skill-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: #1a2740;
+    border: 1px solid #5974a6;
+    border-radius: 6px;
+    padding: 5px 7px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-main);
+    cursor: pointer;
+    margin-bottom: 3px;
+    text-align: left;
+  }
+  .skill-item:disabled { opacity: 0.4; cursor: not-allowed; }
+  .skill-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  .skill-desc-mini {
+    font-size: 9.5px;
+    color: #b7c9e8;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .skill-cost { color: var(--mp-blue); font-size: 10px; font-weight: 800; }
+
+  #pad-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 4px;
+  }
+
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 32px);
+    grid-template-rows: repeat(3, 30px);
+    gap: 2px;
+  }
+
+  .pad-btn {
+    background: #223252;
+    border: 1px solid #6783b8;
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pad-btn:active { background: #364f80; transform: scale(0.94); }
+  .pad-center {
+    background: rgba(15, 22, 36, 0.7);
+    border: 1px dashed rgba(120, 150, 200, 0.35);
+    border-radius: 6px;
+    font-size: 9px;
+    color: var(--gold);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .act-btn {
+    padding: 7px 9px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid var(--gold);
+    background: rgba(245, 208, 118, 0.16);
+    color: var(--gold);
+  }
+  .act-btn.cancel {
+    border-color: #889ec4;
+    background: rgba(136, 158, 196, 0.14);
+    color: var(--text-main);
+  }
+  .act-btn:active { transform: scale(0.95); }
+
+  #key-legend {
+    background: rgba(9, 13, 22, 0.95);
+    border: 1px solid rgba(105, 132, 180, 0.35);
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 9.5px;
+    color: var(--text-sub);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+  }
+  .k-cap {
+    color: var(--gold);
+    font-weight: 800;
+  }
+
+  #modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 9, 16, 0.88);
+    backdrop-filter: blur(4px);
+    z-index: 40;
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+  }
+  #modal-overlay.open { display: flex; }
+
+  #title-card {
+    margin: auto;
+    width: 96%;
+    background: linear-gradient(165deg, rgba(26, 36, 66, 0.98) 0%, rgba(12, 16, 30, 0.99) 55%, rgba(34, 18, 36, 0.98) 100%);
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    padding: 16px 14px;
+    text-align: center;
+    box-shadow: 0 24px 68px rgba(0,0,0,0.9), 0 0 28px rgba(245, 208, 118, 0.18);
+    position: relative;
+    overflow: hidden;
+  }
+  #title-card::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(245, 208, 118, 0.32);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .title-crest {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: #ffe299;
+    background: rgba(245, 208, 118, 0.12);
+    border: 1px solid rgba(245, 208, 118, 0.45);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-weight: 800;
+  }
+  .title-main {
+    font-size: clamp(18px, 3vw, 25px);
+    font-weight: 900;
+    margin: 7px 0 8px;
+    line-height: 1.28;
+    color: #fff;
+    text-shadow: 0 2px 14px rgba(245, 208, 118, 0.42);
+  }
+  .title-quint-strip {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 8px 0 10px;
+    flex-wrap: wrap;
+  }
+  .quint-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .title-desc {
+    font-size: 11.5px;
+    color: var(--text-sub);
+    line-height: 1.58;
+    margin-bottom: 12px;
+    text-align: left;
+    background: rgba(9, 13, 24, 0.65);
+    border: 1px solid rgba(130, 160, 215, 0.25);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .title-btn-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .big-btn {
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #423518 0%, #241c0d 100%);
+    color: var(--gold);
+  }
+  .big-btn.secondary {
+    border-color: #6b86b8;
+    background: #1b2842;
+    color: var(--text-main);
+  }
+  .big-btn.help-sec {
+    border-color: #38bdf8;
+    background: #132a3d;
+    color: #7dd3fc;
+  }
+  .big-btn.danger {
+    border-color: #b84452;
+    background: #33161c;
+    color: #ff9ba3;
+  }
+  .big-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+  #adv-box {
+    width: 100%;
+    background: linear-gradient(180deg, rgba(22, 27, 45, 0.98) 0%, rgba(11, 15, 26, 0.99) 100%);
+    border: 1.5px solid var(--gold);
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.8);
+  }
+  #adv-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  #adv-speaker {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--gold);
+  }
+  #adv-scene-tag {
+    font-size: 10px;
+    color: var(--text-sub);
+    background: rgba(255,255,255,0.07);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  #adv-body {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  #adv-portrait-canvas {
+    width: 144px;
+    height: 184px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(245, 208, 118, 0.75);
+    background: linear-gradient(180deg, #2b3a5e 0%, #111829 100%);
+    flex: 0 0 auto;
+    display: block;
+  }
+  #adv-text {
+    flex: 1 1 auto;
+    font-size: 13px;
+    line-height: 1.65;
+    min-height: 120px;
+    color: var(--text-main);
+    white-space: pre-line;
+  }
+  #adv-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  #adv-skip-btn {
+    background: transparent;
+    border: 1px solid rgba(169, 184, 209, 0.4);
+    color: var(--text-sub);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  #adv-next-btn {
+    background: var(--gold);
+    border: none;
+    color: #151107;
+    border-radius: 7px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  #submodal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 8, 15, 0.88);
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  #submodal-overlay.open { display: flex; }
+  #submodal-card {
+    width: 100%;
+    max-height: 88%;
+    overflow-y: auto;
+    background: #131c2e;
+    border: 1.5px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .submodal-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--gold);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .roster-row {
+    background: #1a263d;
+    border: 1px solid rgba(130, 160, 215, 0.35);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 7px;
+  }
+  .roster-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .ability-chip-btn {
+    background: #243554;
+    border: 1px solid #6a86ba;
+    color: #fff;
+    border-radius: 5px;
+    padding: 4px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 4px 4px 0 0;
+  }
+  .ability-chip-btn.learned {
+    background: rgba(56, 217, 119, 0.18);
+    border-color: var(--hp-green);
+    color: #9bf7be;
+  }
+  .ability-chip-btn:disabled:not(.learned) {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .reset-abil-btn {
+    background: rgba(251, 146, 60, 0.16);
+    border: 1px solid #fb923c;
+    color: #fed7aa;
+    border-radius: 5px;
+    padding: 3px 7px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .reset-abil-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: #64748b;
+    color: #94a3b8;
+  }
+  .help-job-card {
+    background: #182338;
+    border: 1px solid rgba(125, 160, 215, 0.35);
+    border-radius: 8px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1.48;
+  }
+  .help-job-head {
+    font-weight: 900;
+    color: var(--gold);
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+</style>
+</head>
+<body>
+<div id="app-shell">
+  <div id="top-hud">
+    <div id="system-strip">
+      <div id="stage-badge">FFT 五等分の花嫁</div>
+      <div id="sys-btn-group">
+        <button class="sys-btn help-btn" id="btn-help">ヘルプ</button>
+        <button class="sys-btn" id="btn-roster">JP育成</button>
+        <button class="sys-btn" id="btn-save">セーブ</button>
+        <button class="sys-btn danger" id="btn-del-save">削除</button>
+        <button class="sys-btn active" id="btn-sound">BGM/SE:ON</button>
+      </div>
+    </div>
+    <div id="at-bar"></div>
+  </div>
+
+  <div id="battle-viewport">
+    <canvas id="game-canvas"></canvas>
+    <div id="zoom-pill">ZOOM 1.5x | 視点:南東</div>
+    <div id="cam-overlay">
+      <button class="cam-btn" id="cam-zoom-in" title="拡大 (+)">＋</button>
+      <button class="cam-btn" id="cam-zoom-out" title="縮小 (-)">－</button>
+      <button class="cam-btn" id="cam-focus" title="対象追従 (F)">◎</button>
+      <button class="cam-btn" id="cam-rot" title="視点回転 (Q/E)">↻</button>
+    </div>
+    <div id="skill-cast-banner">
+      <div class="cast-title" id="cast-title">アビリティ発動</div>
+      <div class="cast-desc" id="cast-desc">効果説明</div>
+    </div>
+    <div id="toast-banner"></div>
+  </div>
+
+  <div id="bottom-hud">
+    <div id="active-unit-card">
+      <div class="unit-portrait-mini" id="u-icon">次</div>
+      <div class="unit-meta">
+        <div class="unit-name-row">
+          <span id="u-name">次郎</span>
+          <span class="job-tag" id="u-job">見習い戦士</span>
+          <span class="buff-tag" id="u-buff-tag" style="display:none;"></span>
+          <span class="mount-tag" id="u-mount-tag" style="display:none;"></span>
+          <span id="u-ct-info" style="font-size:10px;color:var(--gold);"></span>
+        </div>
+        <div class="gauge-row">
+          <div class="gauge-box">
+            <div style="display:flex;justify-content:space-between;"><span>HP</span><span id="u-hp-txt">170/170</span></div>
+            <div class="bar-track"><div class="bar-fill" id="u-hp-bar" style="width:100%;background:var(--hp-green);"></div></div>
+          </div>
+          <div class="gauge-box">
+            <div style="display:flex;justify-content:space-between;"><span>MP</span><span id="u-mp-txt">38/38</span></div>
+            <div class="bar-track"><div class="bar-fill" id="u-mp-bar" style="width:100%;background:var(--mp-blue);"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub-stats">
+        <div>MOV:<strong id="u-mov">4</strong> JMP:<strong id="u-jmp">3</strong></div>
+        <div>JP:<strong id="u-jp">55</strong> <span id="u-state-tag" style="color:#ff9aa3;"></span></div>
+      </div>
+    </div>
+
+    <div id="control-deck">
+      <div id="cmd-panel"></div>
+      <div id="pad-panel">
+        <div class="dpad">
+          <div></div>
+          <button class="pad-btn" id="pad-up" title="上移動">▲</button>
+          <div></div>
+          <button class="pad-btn" id="pad-left" title="左移動">◀</button>
+          <div class="pad-center" id="pad-dir-label">南東</div>
+          <button class="pad-btn" id="pad-right" title="右移動">▶</button>
+          <div></div>
+          <button class="pad-btn" id="pad-down" title="下移動">▼</button>
+          <div></div>
+        </div>
+        <div class="action-stack">
+          <button class="act-btn" id="btn-confirm">決定 (Enter)</button>
+          <button class="act-btn cancel" id="btn-cancel">戻る (Esc)</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="key-legend">
+      <span><span class="k-cap">WASD/矢印</span> カーソル移動</span>
+      <span><span class="k-cap">Enter/Space</span> 決定</span>
+      <span><span class="k-cap">Esc/X</span> 戻る</span>
+      <span><span class="k-cap">Q/E</span> 回転</span>
+      <span><span class="k-cap">+/-/F</span> ズーム/追従</span>
+    </div>
+  </div>
+
+  <div id="modal-overlay">
+    <div id="title-card" style="display:none;">
+      <div class="title-crest">TACTICAL HAREM CHRONICLE</div>
+      <div class="title-main">ファイナルファンタジータクティクス<br>五等分の花嫁</div>
+      <div class="title-quint-strip">
+        <span class="quint-badge" style="color:#f4a293;border-color:#f4a293;">一花・騎士</span>
+        <span class="quint-badge" style="color:#f48fb1;border-color:#f48fb1;">二乃・黒魔</span>
+        <span class="quint-badge" style="color:#c9826b;border-color:#c9826b;">三玖・弓使い</span>
+        <span class="quint-badge" style="color:#eb9b6e;border-color:#eb9b6e;">四葉・白魔</span>
+        <span class="quint-badge" style="color:#e56b6f;border-color:#e56b6f;">五月・魔導</span>
+      </div>
+      <div class="title-desc">
+        40歳・無職・肥満体型の主人公「次郎」と中野家の五つ子が織りなす固有ジョブ戦記！<br>
+        全員固定ジョブ＆キャラ／ジョブ専用アビリティ（初期未習得）・チョコボ騎乗・3カウント永久離脱・分岐エンディング搭載。
+      </div>
+      <div class="title-btn-list">
+        <button class="big-btn" id="btn-new-game">▶ 最初から始める（OP ADVへ）</button>
+        <button class="big-btn secondary" id="btn-continue-game">セーブデータから再開</button>
+        <button class="big-btn help-sec" id="btn-title-help">ジョブ・ルール ヘルプ</button>
+        <button class="big-btn danger" id="btn-title-del-save">セーブデータを削除</button>
+      </div>
+    </div>
+
+    <div id="adv-box" style="display:none;">
+      <div id="adv-header">
+        <div id="adv-speaker">次郎</div>
+        <div id="adv-scene-tag">OPENING</div>
+      </div>
+      <div id="adv-body">
+        <canvas id="adv-portrait-canvas" width="288" height="368"></canvas>
+        <div id="adv-text"></div>
+      </div>
+      <div id="adv-footer">
+        <button id="adv-skip-btn">スキップ</button>
+        <button id="adv-next-btn">次へ ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="submodal-overlay">
+    <div id="submodal-card">
+      <div class="submodal-title">
+        <span id="submodal-heading">ヘルプ / JP育成</span>
+        <button class="sys-btn" id="submodal-close">閉じる</button>
+      </div>
+      <div id="submodal-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const SAVE_KEY = "fft_gotoubun_save_v5";
+
+  // =========================================================================
+  // 1. WEB AUDIO SYNTHESIZER (Unique SE per Ability)
+  // =========================================================================
+  class SoundEngine {
+    constructor() {
+      this.ctx = null;
+      this.enabled = true;
+      this.bgmTimer = null;
+      this.currentBgmKey = null;
+      this.step = 0;
+    }
+
+    ensureContext() {
+      if (!this.enabled) return null;
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      return this.ctx;
+    }
+
+    setEnabled(val) {
+      this.enabled = val;
+      if (!val) {
+        this.stopBgm();
+      } else {
+        this.ensureContext();
+        if (this.currentBgmKey) {
+          const k = this.currentBgmKey;
+          this.currentBgmKey = null;
+          this.playBgm(k);
+        }
+      }
+    }
+
+    stopBgm() {
+      if (this.bgmTimer) {
+        clearInterval(this.bgmTimer);
+        this.bgmTimer = null;
+      }
+    }
+
+    playTone(freq, duration, type = "triangle", volume = 0.08, delay = 0, slideTo = null) {
+      const ctx = this.ensureContext();
+      if (!ctx || !this.enabled) return;
+      const now = ctx.currentTime + delay;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (slideTo) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + duration);
+      }
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(volume, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
+
+    playNoise(duration = 0.12, volume = 0.09, filterFreq = 1200, delay = 0) {
+      const ctx = this.ensureContext();
+      if (!ctx || !this.enabled) return;
+      const startTime = ctx.currentTime + delay;
+      const sampleRate = ctx.sampleRate;
+      const frameCount = Math.max(1, Math.floor(sampleRate * duration));
+      const buffer = ctx.createBuffer(1, frameCount, sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < frameCount; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (frameCount * 0.4));
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.value = filterFreq;
+      const gain = ctx.createGain();
+      gain.gain.value = volume;
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(startTime);
+    }
+
+    seCursor() { this.playTone(660, 0.05, "sine", 0.06); }
+    seConfirm() {
+      this.playTone(587.33, 0.07, "triangle", 0.09, 0);
+      this.playTone(880, 0.11, "triangle", 0.09, 0.06);
+    }
+    seCancel() {
+      this.playTone(440, 0.07, "sine", 0.08, 0);
+      this.playTone(311.13, 0.09, "sine", 0.08, 0.05);
+    }
+    seError() {
+      this.playTone(170, 0.14, "sawtooth", 0.09, 0, 120);
+    }
+    seMove() {
+      this.playTone(320, 0.05, "triangle", 0.06, 0, 420);
+    }
+    seHit() {
+      this.playNoise(0.14, 0.15, 720);
+      this.playTone(150, 0.14, "square", 0.085, 0, 58);
+    }
+    seKo() {
+      this.playTone(330, 0.18, "sawtooth", 0.1, 0, 220);
+      this.playTone(220, 0.26, "sawtooth", 0.1, 0.16, 110);
+    }
+    seDeathSentence() {
+      this.playTone(220, 0.16, "sawtooth", 0.12, 0, 130);
+      this.playTone(130.81, 0.34, "sawtooth", 0.12, 0.14, 55);
+      this.playNoise(0.22, 0.14, 480);
+    }
+    seLoss() {
+      this.playTone(246.94, 0.22, "sawtooth", 0.11, 0);
+      this.playTone(185.0, 0.28, "sawtooth", 0.11, 0.2);
+      this.playTone(130.81, 0.45, "sawtooth", 0.12, 0.42);
+    }
+    seVictory() {
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((n, i) => this.playTone(n, 0.18, "triangle", 0.1, i * 0.11));
+    }
+
+    seSkill(key) {
+      switch (key) {
+        case "basic_attack":
+          this.playNoise(0.11, 0.12, 1800);
+          this.playTone(460, 0.1, "triangle", 0.09, 0, 190);
+          break;
+        case "jiro_guts_charge":
+          this.playTone(220, 0.12, "sawtooth", 0.09, 0, 440);
+          this.playTone(330, 0.16, "triangle", 0.09, 0.08, 660);
+          break;
+        case "jiro_belly_slam":
+          this.playTone(130, 0.24, "sawtooth", 0.14, 0, 42);
+          this.playNoise(0.2, 0.17, 460);
+          break;
+        case "jiro_harem_cheer":
+          this.playTone(523.25, 0.09, "triangle", 0.09, 0);
+          this.playTone(659.25, 0.09, "triangle", 0.09, 0.07);
+          this.playTone(783.99, 0.09, "triangle", 0.09, 0.14);
+          this.playTone(1046.5, 0.2, "sine", 0.1, 0.21);
+          break;
+        case "jiro_desperate_bomb":
+          this.playNoise(0.38, 0.24, 520);
+          this.playTone(190, 0.22, "sawtooth", 0.14, 0, 55);
+          this.playTone(110, 0.38, "square", 0.13, 0.12, 32);
+          break;
+        case "ichika_twin_rose_slash":
+          this.playNoise(0.09, 0.14, 2600, 0);
+          this.playTone(740, 0.08, "sawtooth", 0.09, 0, 1180);
+          this.playNoise(0.11, 0.16, 3100, 0.12);
+          this.playTone(920, 0.11, "sawtooth", 0.1, 0.12, 1520);
+          break;
+        case "ichika_holy_slash":
+          this.playTone(880, 0.09, "sawtooth", 0.09, 0, 1320);
+          this.playNoise(0.16, 0.14, 2800);
+          break;
+        case "ichika_aegis_barrier":
+          this.playTone(587.33, 0.11, "sine", 0.09, 0, 880);
+          this.playTone(880.0, 0.16, "triangle", 0.09, 0.08);
+          break;
+        case "ichika_starlight_slash":
+          this.playTone(659.25, 0.08, "triangle", 0.09, 0, 1318.5);
+          this.playTone(987.77, 0.1, "sine", 0.09, 0.08, 1567.98);
+          this.playNoise(0.2, 0.15, 3200, 0.1);
+          break;
+        case "miku_shingen_pierce_line":
+          this.playTone(1760, 0.07, "sawtooth", 0.1, 0, 420);
+          this.playNoise(0.16, 0.15, 3800, 0.03);
+          this.playTone(520, 0.12, "triangle", 0.08, 0.1);
+          break;
+        case "miku_sengoku_snipe":
+          this.playTone(1480, 0.06, "sawtooth", 0.09, 0, 320);
+          this.playNoise(0.09, 0.14, 3400);
+          break;
+        case "miku_wind_vanguard":
+          this.playNoise(0.16, 0.1, 2200);
+          this.playTone(493.88, 0.12, "sine", 0.09, 0, 739.99);
+          break;
+        case "miku_tenka_pierce":
+          this.playTone(1320, 0.07, "sawtooth", 0.09, 0, 360);
+          this.playNoise(0.22, 0.16, 3500, 0.06);
+          break;
+        case "nino_tsundere_3x3":
+          this.playTone(680, 0.09, "sawtooth", 0.1, 0, 310);
+          this.playNoise(0.22, 0.16, 1100, 0.04);
+          this.playTone(240, 0.2, "square", 0.09, 0.08, 85);
+          break;
+        case "nino_crimson_5x5_nova":
+          this.playTone(880, 0.1, "sawtooth", 0.11, 0, 260);
+          this.playNoise(0.32, 0.21, 950, 0.05);
+          this.playTone(180, 0.34, "square", 0.11, 0.1, 52);
+          break;
+        case "nino_tsundere_flare":
+          this.playNoise(0.22, 0.17, 1050);
+          this.playTone(620, 0.12, "sawtooth", 0.1, 0, 220);
+          break;
+        case "nino_crimson_inferno":
+          this.playNoise(0.28, 0.19, 880);
+          this.playTone(210, 0.26, "square", 0.1, 0.06, 65);
+          break;
+        case "itsuki_star_5_ray":
+          this.playTone(1046.5, 0.08, "sine", 0.09, 0, 1567.98);
+          this.playTone(783.99, 0.1, "triangle", 0.09, 0.07, 1174.66);
+          this.playNoise(0.16, 0.13, 2100, 0.08);
+          break;
+        case "itsuki_astral_3x10_cannon":
+          this.playTone(523.25, 0.12, "sawtooth", 0.1, 0, 1046.5);
+          this.playNoise(0.34, 0.21, 1450, 0.06);
+          this.playTone(165, 0.36, "square", 0.11, 0.12, 48);
+          break;
+        case "itsuki_meteor":
+          this.playTone(987.77, 0.08, "sine", 0.08, 0, 1567.98);
+          this.playNoise(0.18, 0.13, 1700);
+          break;
+        case "itsuki_grand_feast_nova":
+          this.playTone(587.33, 0.1, "sine", 0.09, 0, 1174.66);
+          this.playNoise(0.25, 0.16, 1500, 0.06);
+          break;
+        case "yotsuba_cheer_buff":
+        case "yotsuba_all_heal":
+        case "choco_all_heal":
+        case "choco_cure":
+          this.playTone(659.25, 0.08, "triangle", 0.08, 0);
+          this.playTone(880, 0.08, "triangle", 0.08, 0.07);
+          this.playTone(1174.66, 0.15, "sine", 0.09, 0.14);
+          break;
+        case "yotsuba_raise":
+        case "yotsuba_miracle_divine":
+          this.playTone(440, 0.12, "sine", 0.09, 0, 880);
+          this.playTone(880, 0.22, "triangle", 0.1, 0.12, 1318.5);
+          break;
+        case "choco_yellow_rush":
+          this.playTone(523.25, 0.07, "triangle", 0.09, 0, 783.99);
+          this.playNoise(0.11, 0.12, 1600);
+          break;
+        case "choco_black_meteor":
+        case "choco_black_sky_barrier":
+          this.playTone(784, 0.09, "square", 0.08, 0, 196);
+          this.playNoise(0.22, 0.16, 1100);
+          break;
+        case "choco_red_flare_meteor":
+        case "choco_red_overdrive":
+          this.playNoise(0.26, 0.18, 900);
+          this.playTone(660, 0.1, "sawtooth", 0.1, 0, 180);
+          break;
+        default:
+          this.playNoise(0.12, 0.13, 1500);
+          this.playTone(440, 0.12, "triangle", 0.08, 0, 180);
+      }
+    }
+
+    playBgm(key) {
+      if (this.currentBgmKey === key && this.bgmTimer) return;
+      this.currentBgmKey = key;
+      this.stopBgm();
+      this.step = 0;
+      if (!this.enabled) return;
+
+      const patterns = {
+        adv_op: {
+          tempoMs: 360,
+          mel: [261.63, 329.63, 392.0, 493.88, 440.0, 392.0, 329.63, 293.66],
+          bass: [130.81, 0, 196.0, 0, 146.83, 0, 196.0, 0],
+          type: "sine",
+          vol: 0.045
+        },
+        adv_drama: {
+          tempoMs: 320,
+          mel: [293.66, 349.23, 440.0, 523.25, 466.16, 440.0, 349.23, 329.63],
+          bass: [146.83, 0, 174.61, 0, 116.54, 0, 164.81, 0],
+          type: "triangle",
+          vol: 0.045
+        },
+        adv_end: {
+          tempoMs: 380,
+          mel: [392.0, 493.88, 587.33, 659.25, 587.33, 493.88, 440.0, 392.0],
+          bass: [196.0, 0, 246.94, 0, 146.83, 0, 196.0, 0],
+          type: "sine",
+          vol: 0.05
+        },
+        stage1: {
+          tempoMs: 280,
+          mel: [329.63, 392.0, 493.88, 392.0, 329.63, 293.66, 392.0, 440.0,
+                392.0, 329.63, 293.66, 329.63, 246.94, 293.66, 329.63, 0],
+          bass: [164.81, 0, 196.0, 0, 146.83, 0, 196.0, 0,
+                 130.81, 0, 164.81, 0, 123.47, 0, 164.81, 0],
+          type: "triangle",
+          vol: 0.042
+        },
+        stage2: {
+          tempoMs: 265,
+          mel: [392.0, 493.88, 587.33, 493.88, 440.0, 523.25, 659.25, 587.33,
+                493.88, 587.33, 783.99, 659.25, 587.33, 493.88, 440.0, 392.0],
+          bass: [196.0, 0, 293.66, 0, 220.0, 0, 329.63, 0,
+                 246.94, 0, 196.0, 0, 146.83, 0, 196.0, 0],
+          type: "sine",
+          vol: 0.044
+        },
+        stage3: {
+          tempoMs: 290,
+          mel: [440.0, 523.25, 659.25, 587.33, 523.25, 493.88, 523.25, 659.25,
+                783.99, 659.25, 587.33, 523.25, 493.88, 440.0, 392.0, 440.0],
+          bass: [220.0, 0, 174.61, 0, 196.0, 0, 164.81, 0,
+                 146.83, 0, 196.0, 0, 164.81, 0, 220.0, 0],
+          type: "sine",
+          vol: 0.042
+        }
+      };
+
+      const p = patterns[key] || patterns.stage1;
+      this.bgmTimer = setInterval(() => {
+        if (!this.enabled) return;
+        const idx = this.step % p.mel.length;
+        const mNote = p.mel[idx];
+        const bNote = p.bass[idx];
+        if (mNote > 0) this.playTone(mNote, (p.tempoMs / 1000) * 0.85, p.type, p.vol);
+        if (bNote > 0) this.playTone(bNote, (p.tempoMs / 1000) * 0.9, "sine", p.vol * 1.15);
+        this.step++;
+      }, p.tempoMs);
+    }
+  }
+
+  const sound = new SoundEngine();
+
+  // =========================================================================
+  // 2. CHARACTER & JOB EXCLUSIVE ABILITIES (No Instant-Death on Allies)
+  // =========================================================================
+  const ABILITIES_DB = {
+    jiro_guts_charge: {
+      id: "jiro_guts_charge", name: "ためる（オヤジ気合）", costMp: 0, range: 0, scope: "self",
+      jpCost: 25, kind: "charge", anim: "jiro_charge_aura",
+      desc: "【次郎固有・溜め】物理倍率+0.6倍（重複・重ねがけ可能／消費MP0／JP25）。"
+    },
+    jiro_belly_slam: {
+      id: "jiro_belly_slam", name: "おやじ体当たり", costMp: 0, range: 1, scope: "enemy", power: 1.35,
+      jpCost: 45, kind: "phys", anim: "belly_slam",
+      desc: "【次郎固有・物理】重厚な巨体で体当たり攻撃（射程1／威力1.35倍／JP45）。"
+    },
+    jiro_harem_cheer: {
+      id: "jiro_harem_cheer", name: "ハーレム号令", costMp: 8, range: 0, scope: "all_ally", healPct: 0.25,
+      jpCost: 70, kind: "all_heal", anim: "hearts",
+      desc: "【次郎固有・全体回復】生存する味方全員のHPを25%回復する（全体／JP70）。"
+    },
+    jiro_desperate_bomb: {
+      id: "jiro_desperate_bomb", name: "捨て身の腹割り自爆", costMp: 0, range: 2, scope: "all_hazard", power: 2.45,
+      jpCost: 95, kind: "self_destruct_all", anim: "jiro_self_detonation",
+      desc: "【次郎固有・自爆】敵味方問わず周囲2マスに超絶ダメージ！次郎自身は即死（騎乗チョコボにも超絶ダメージ／JP95）。"
+    },
+
+    ichika_twin_rose_slash: {
+      id: "ichika_twin_rose_slash", name: "花弁二連斬", costMp: 6, range: 1, scope: "enemy", power: 1.15, hits: 2,
+      jpCost: 25, kind: "multi_phys", anim: "ichika_twin_slash",
+      desc: "【一花固有・二連斬】隣接する敵に2回連続で剣撃を浴びせる（射程1／1.15倍×2回／JP25）。"
+    },
+    ichika_holy_slash: {
+      id: "ichika_holy_slash", name: "聖剣技・不動斬", costMp: 8, range: 3, scope: "enemy", power: 1.45,
+      jpCost: 45, kind: "phys", anim: "holy_cross",
+      desc: "【一花固有・剣技】射程3まで届く聖なる剣閃で物理攻撃（威力1.45倍／JP45）。"
+    },
+    ichika_aegis_barrier: {
+      id: "ichika_aegis_barrier", name: "騎士団の盾バリア", costMp: 8, range: 3, scope: "ally", barrierAmt: 65,
+      jpCost: 70, kind: "barrier", anim: "shield_dome",
+      desc: "【一花固有・バリア】味方1人にダメージを65防ぐ防御バリアを張る（JP70）。"
+    },
+    ichika_starlight_slash: {
+      id: "ichika_starlight_slash", name: "秘奥義・スターライト演舞", costMp: 14, range: 3, scope: "all_enemy", power: 1.75,
+      jpCost: 95, kind: "all_phys", anim: "spotlight_slash",
+      desc: "【一花固有・奥義】敵全体に華麗な連続剣閃を浴びせる（全体物理1.75倍／JP95）。"
+    },
+
+    nino_tsundere_3x3: {
+      id: "nino_tsundere_3x3", name: "恋焦がれ3×3バースト", costMp: 10, range: 3, scope: "area_3x3", power: 1.52,
+      jpCost: 25, kind: "area_mag", anim: "nino_burst_3x3",
+      desc: "【二乃固有・3×3魔法】指定中心3×3マスに爆炎魔法！（味方にも命中／魔力1.52倍／JP25）。"
+    },
+    nino_tsundere_flare: {
+      id: "nino_tsundere_flare", name: "ツンデレ爆炎", costMp: 10, range: 3, scope: "enemy", power: 1.55,
+      jpCost: 45, kind: "mag", anim: "flame_burst",
+      desc: "【二乃固有・魔法】魔力1.55倍の爆炎で敵1体を焼き払う（射程3／JP45）。"
+    },
+    nino_crimson_5x5_nova: {
+      id: "nino_crimson_5x5_nova", name: "紅蓮の5×5ローズ・ノヴァ", costMp: 15, range: 3, scope: "area_5x5", power: 2.15,
+      jpCost: 70, kind: "area_mag", anim: "nino_nova_5x5",
+      desc: "【二乃固有・5×5超魔法】5×5広域に紅蓮の業火！（味方にも命中／全体奥義より高威力2.15倍／JP70）。"
+    },
+    nino_crimson_inferno: {
+      id: "nino_crimson_inferno", name: "秘奥義・業火のツンデレ嵐", costMp: 16, range: 3, scope: "all_enemy", power: 1.85,
+      jpCost: 95, kind: "all_mag", anim: "flame_burst",
+      desc: "【二乃固有・奥義】敵全体を紅蓮の業火で包む超絶魔法（全体魔力1.85倍／JP95）。"
+    },
+
+    miku_shingen_pierce_line: {
+      id: "miku_shingen_pierce_line", name: "戦国一文字・貫通矢", costMp: 8, range: 8, scope: "line_pierce", power: 1.48,
+      jpCost: 25, kind: "line_phys", anim: "miku_pierce_arrow",
+      desc: "【三玖固有・貫通弓】4方向直線上のどこまでも貫通する矢を放つ（威力1.48倍／JP25）。"
+    },
+    miku_sengoku_snipe: {
+      id: "miku_sengoku_snipe", name: "戦国狙撃・一閃", costMp: 6, range: 4, scope: "enemy", power: 1.42,
+      jpCost: 45, kind: "phys", anim: "snipe_flash",
+      desc: "【三玖固有・狙撃】長射程4から急所を射抜く物理攻撃（威力1.42倍／JP45）。"
+    },
+    miku_wind_vanguard: {
+      id: "miku_wind_vanguard", name: "疾風の軍略バフ", costMp: 8, range: 0, scope: "all_ally",
+      jpCost: 70, kind: "all_buff", anim: "clover_heal",
+      desc: "【三玖固有・全体バフ】味方全員の攻撃力・魔力を強化する（全体バフ／JP70）。"
+    },
+    miku_tenka_pierce: {
+      id: "miku_tenka_pierce", name: "秘奥義・天下布武の矢雨", costMp: 14, range: 4, scope: "all_enemy", power: 1.72,
+      jpCost: 95, kind: "all_phys", anim: "snipe_flash",
+      desc: "【三玖固有・奥義】敵全体に戦国弓矢の猛射を浴びせる（全体物理1.72倍／JP95）。"
+    },
+
+    yotsuba_cheer_buff: {
+      id: "yotsuba_cheer_buff", name: "全力エール（攻魔バフ）", costMp: 6, range: 3, scope: "ally",
+      jpCost: 25, kind: "buff", anim: "clover_heal",
+      desc: "【四葉固有・バフ】味方1人の攻撃力と魔力を3ターン強化する（射程3／JP25）。"
+    },
+    yotsuba_all_heal: {
+      id: "yotsuba_all_heal", name: "四葉の全体ケアルガ", costMp: 10, range: 0, scope: "all_ally", healPct: 0.4,
+      jpCost: 45, kind: "all_heal", anim: "clover_heal",
+      desc: "【四葉固有・全体回復】味方全員のHPを40%回復する（全体／JP45）。"
+    },
+    yotsuba_raise: {
+      id: "yotsuba_raise", name: "四葉の奇跡レイズ", costMp: 12, range: 3, scope: "ko_ally", reviveHp: 0.55,
+      jpCost: 70, kind: "revive", anim: "revive_pillar",
+      desc: "【四葉固有・蘇生】戦闘不能の味方1人をHP55%で戦線復帰させる（射程3／JP70）。"
+    },
+    yotsuba_miracle_divine: {
+      id: "yotsuba_miracle_divine", name: "秘奥義・四つ葉の聖域祝福", costMp: 16, range: 0, scope: "all_ally", healPct: 0.6, barrierAmt: 55,
+      jpCost: 95, kind: "all_heal_barrier", anim: "revive_pillar",
+      desc: "【四葉固有・奥義】味方全員のHP60%回復＆55バリアを同時付与（全体／JP95）。"
+    },
+
+    itsuki_star_5_ray: {
+      id: "itsuki_star_5_ray", name: "星屑5連シューティング", costMp: 10, range: 5, scope: "forward_5", power: 1.56,
+      jpCost: 25, kind: "area_mag", anim: "itsuki_star_5",
+      desc: "【五月固有・前方5連星】前方5マス直線範囲に星屑魔法！（味方にも命中／魔力1.56倍／JP25）。"
+    },
+    itsuki_meteor: {
+      id: "itsuki_meteor", name: "星屑クッキング", costMp: 11, range: 3, scope: "enemy", power: 1.58,
+      jpCost: 45, kind: "mag", anim: "star_shower",
+      desc: "【五月固有・魔法】魔力1.58倍の星屑魔法で敵1体を撃つ（射程3／JP45）。"
+    },
+    itsuki_astral_3x10_cannon: {
+      id: "itsuki_astral_3x10_cannon", name: "満腹星辰3×10キャノン", costMp: 16, range: 10, scope: "forward_3x10", power: 2.15,
+      jpCost: 70, kind: "area_mag", anim: "itsuki_cannon_3x10",
+      desc: "【五月固有・3×10星辰砲】前方幅3×奥行き10マスを薙ぎ払う！（味方にも命中／全体奥義より高威力2.15倍／JP70）。"
+    },
+    itsuki_grand_feast_nova: {
+      id: "itsuki_grand_feast_nova", name: "秘奥義・満腹星辰メテオ", costMp: 16, range: 3, scope: "all_enemy", power: 1.82,
+      jpCost: 95, kind: "all_mag", anim: "star_shower",
+      desc: "【五月固有・奥義】敵全体に星辰の隕石雨を降らせる（全体魔力1.82倍／JP95）。"
+    },
+
+    choco_cure: {
+      id: "choco_cure", name: "チョコケアル", costMp: 6, range: 2, scope: "ally", healPct: 0.45,
+      jpCost: 25, kind: "heal", anim: "clover_heal",
+      desc: "【チョコボ共通】味方1人のHPを45%回復する（射程2／JP25）。"
+    },
+    choco_yellow_rush: {
+      id: "choco_yellow_rush", name: "黄チョコボ・疾走突撃", costMp: 5, range: 2, scope: "enemy", power: 1.35,
+      jpCost: 45, kind: "phys", anim: "belly_slam",
+      desc: "【黄色固有】定番の黄色チョコボが素早い突進で物理攻撃（射程2／威力1.35倍／JP45）。"
+    },
+    choco_all_heal: {
+      id: "choco_all_heal", name: "チョコボ全体ケアルガ", costMp: 11, range: 0, scope: "all_ally", healPct: 0.38,
+      jpCost: 70, kind: "all_heal", anim: "clover_heal",
+      desc: "【チョコボ共通】味方全員のHPを38%回復する（全体／JP70）。"
+    },
+    choco_black_meteor: {
+      id: "choco_black_meteor", name: "黒チョコボ・チョコメテオ", costMp: 11, range: 4, scope: "enemy", power: 1.65,
+      jpCost: 45, kind: "mag", anim: "choco_comet",
+      desc: "【黒固有】黒チョコボ定番の「チョコメテオ」で遠距離魔法攻撃（射程4／威力1.65倍／JP45）。"
+    },
+    choco_black_sky_barrier: {
+      id: "choco_black_sky_barrier", name: "黒チョコボ・夜空の結界", costMp: 10, range: 0, scope: "all_ally", barrierAmt: 50,
+      jpCost: 95, kind: "all_barrier", anim: "shield_dome",
+      desc: "【黒固有】夜空の翼で味方全員に50ダメージ分のバリアを展開（全体／JP95）。"
+    },
+    choco_red_flare_meteor: {
+      id: "choco_red_flare_meteor", name: "赤チョコボ・紅蓮メテオ", costMp: 13, range: 4, scope: "all_enemy", power: 1.75,
+      jpCost: 50, kind: "all_mag", anim: "choco_comet",
+      desc: "【赤固有】上位の赤チョコボが敵全体に紅蓮の隕石を落とす（全体魔力1.75倍／JP50）。"
+    },
+    choco_red_overdrive: {
+      id: "choco_red_overdrive", name: "赤チョコボ・真紅の咆哮", costMp: 12, range: 0, scope: "all_ally",
+      jpCost: 95, kind: "all_buff", anim: "flame_burst",
+      desc: "【赤固有】強烈な咆哮で味方全員の攻撃力・魔力を大幅強化（全体バフ／JP95）。"
+    },
+
+    // --- 敵専用技（即死技＆全体攻撃を含む） ---
+    enemy_slash: {
+      id: "enemy_slash", name: "聖剣技・強斬", costMp: 0, range: 2, scope: "enemy", power: 1.25,
+      jpCost: 0, kind: "phys", anim: "holy_cross",
+      desc: "敵の強力な剣技（射程2／物理1.25倍）。"
+    },
+    enemy_holy: {
+      id: "enemy_holy", name: "ホーリー光弾", costMp: 8, range: 3, scope: "enemy", power: 1.4,
+      jpCost: 0, kind: "mag", anim: "holy_orb",
+      desc: "敵の聖なる光弾魔法（射程3／魔力1.4倍）。"
+    },
+    enemy_aoe_quake: {
+      id: "enemy_aoe_quake", name: "デッドリー・ウェーブ", costMp: 10, range: 3, scope: "all_enemy", power: 1.15,
+      jpCost: 0, kind: "all_mag", anim: "flame_burst",
+      desc: "敵の全体攻撃魔法（周囲の味方全員に魔力1.15倍ダメージ）。"
+    },
+    enemy_instant_death: {
+      id: "enemy_instant_death", name: "死の宣告・デスブレード", costMp: 12, range: 3, scope: "enemy", power: 0,
+      jpCost: 0, kind: "instant_death", anim: "death_scythe",
+      desc: "敵の即死技！ 対象を即座に戦闘不能にする（射程3）。"
+    }
+  };
+
+  const JOBS_DB = {
+    squire:      { id: "squire",      name: "見習い戦士",   hpMult: 1.05, mpMult: 0.8,  atkMult: 1.05, magMult: 0.85, spd: 10, mov: 4, jmp: 3, roleDesc: "次郎の固有ジョブ。溜め・体当たり・全体号令・味方巻き込み自爆を持つ前衛。" },
+    knight:      { id: "knight",      name: "ホーリーナイト", hpMult: 1.22, mpMult: 0.9,  atkMult: 1.2,  magMult: 0.9,  spd: 10, mov: 4, jmp: 3, roleDesc: "一花の固有ジョブ。花弁二連斬・聖剣技・盾バリア・全体奥義を操る前衛騎士。" },
+    wizard:      { id: "wizard",      name: "黒魔道士",     hpMult: 0.85, mpMult: 1.4,  atkMult: 0.82, magMult: 1.4,  spd: 10, mov: 3, jmp: 3, roleDesc: "二乃・五月の固有ジョブ。高魔力＆高MPと広域巻き込み魔法を操る魔法職。" },
+    archer:      { id: "archer",      name: "弓使い",       hpMult: 0.92, mpMult: 0.95, atkMult: 1.18, magMult: 0.9,  spd: 11, mov: 4, jmp: 3, roleDesc: "三玖の固有ジョブ。「たたかう」も射程4の遠距離攻撃が可能。貫通矢と矢雨奥義を持つ。" },
+    white_mage:  { id: "white_mage",  name: "白魔道士",     hpMult: 0.88, mpMult: 1.35, atkMult: 0.82, magMult: 1.25, spd: 12, mov: 5, jmp: 4, roleDesc: "四葉の固有ジョブ。高機動の支援職で、全体回復・バフ・蘇生・聖域祝福を担う。" },
+    chocobo_y:   { id: "chocobo_y",   name: "黄色チョコボ",   hpMult: 1.0,  mpMult: 1.1,  atkMult: 0.95, magMult: 1.05, spd: 12, mov: 5, jmp: 4, roleDesc: "原作FFTの定番チョコボ。味方が騎乗可能で、回復と疾走突撃を得意とする。" },
+    chocobo_b:   { id: "chocobo_b",   name: "黒チョコボ(飛)", hpMult: 1.02, mpMult: 1.2,  atkMult: 1.12, magMult: 1.28, spd: 13, mov: 5, jmp: 5, fly: true, roleDesc: "原作FFTで空を飛び「チョコメテオ」を使う魔法チョコボ。味方の騎乗も可能。" },
+    chocobo_r:   { id: "chocobo_r",   name: "赤チョコボ",     hpMult: 1.22, mpMult: 1.35, atkMult: 1.36, magMult: 1.42, spd: 13, mov: 5, jmp: 4, roleDesc: "原作FFTで高ステータスと強力な魔法を誇る精鋭チョコボ。味方の騎乗も可能。" },
+    sword_saint: { id: "sword_saint", name: "剣聖",         hpMult: 1.3,  mpMult: 1.2,  atkMult: 1.4,  magMult: 1.2,  spd: 12, mov: 5, jmp: 4, roleDesc: "圧倒的な剣技と機動力を持つ強敵ジョブ。" },
+    iron_giant:  { id: "iron_giant",  name: "鉄巨人",       hpMult: 1.5,  mpMult: 0.6,  atkMult: 1.32, magMult: 1.1,  spd: 9,  mov: 3, jmp: 2, roleDesc: "超重装甲の巨躯。低い機動力と引き換えに莫大なHPと攻撃力を誇る。" }
+  };
+
+  function createInitialRoster() {
+    return [
+      {
+        id: "jiro", name: "次郎", short: "次", faction: "ally", archetype: "jiro",
+        color: "#475569", accent: "#334155", eyeColor: "#2d2a26",
+        jobId: "squire", lv: 5, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 170, hp: 170, maxMp: 38, mp: 38, atk: 27, mag: 16, spd: 10, mov: 4, jmp: 3,
+        fly: false, ct: 0, x: 1, y: 5, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["jiro_guts_charge", "jiro_belly_slam", "jiro_harem_cheer", "jiro_desperate_bomb"]
+      },
+      {
+        id: "ichika", name: "一花", short: "一", faction: "ally", archetype: "ichika",
+        color: "#e89888", accent: "#d97852", eyeColor: "#4f86c6",
+        jobId: "knight", lv: 5, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 152, hp: 152, maxMp: 44, mp: 44, atk: 26, mag: 20, spd: 11, mov: 4, jmp: 3,
+        fly: false, ct: 0, x: 1, y: 3, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["ichika_twin_rose_slash", "ichika_holy_slash", "ichika_aegis_barrier", "ichika_starlight_slash"]
+      },
+      {
+        id: "nino", name: "二乃", short: "二", faction: "ally", archetype: "nino",
+        color: "#e07b8b", accent: "#c94a6a", eyeColor: "#7c4dff",
+        jobId: "wizard", lv: 5, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 126, hp: 126, maxMp: 66, mp: 66, atk: 19, mag: 32, spd: 11, mov: 3, jmp: 3,
+        fly: false, ct: 0, x: 2, y: 2, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["nino_tsundere_3x3", "nino_tsundere_flare", "nino_crimson_5x5_nova", "nino_crimson_inferno"]
+      },
+      {
+        id: "miku", name: "三玖", short: "三", faction: "ally", archetype: "miku",
+        color: "#9e5b48", accent: "#2b4c7e", eyeColor: "#2e5994",
+        jobId: "archer", lv: 5, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 136, hp: 136, maxMp: 48, mp: 48, atk: 27, mag: 21, spd: 11, mov: 4, jmp: 3,
+        fly: false, ct: 0, x: 2, y: 4, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["miku_shingen_pierce_line", "miku_sengoku_snipe", "miku_wind_vanguard", "miku_tenka_pierce"]
+      },
+      {
+        id: "yotsuba", name: "四葉", short: "四", faction: "ally", archetype: "yotsuba",
+        color: "#d98252", accent: "#2f855a", eyeColor: "#2b9348",
+        jobId: "white_mage", lv: 5, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 140, hp: 140, maxMp: 64, mp: 64, atk: 21, mag: 29, spd: 12, mov: 5, jmp: 4,
+        fly: false, ct: 0, x: 2, y: 6, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["yotsuba_cheer_buff", "yotsuba_all_heal", "yotsuba_raise", "yotsuba_miracle_divine"]
+      },
+      {
+        id: "itsuki", name: "五月", short: "五", faction: "ally", archetype: "itsuki",
+        color: "#c94444", accent: "#8c2d38", eyeColor: "#3b5998",
+        jobId: "wizard", lv: 5, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 138, hp: 138, maxMp: 62, mp: 62, atk: 21, mag: 31, spd: 10, mov: 3, jmp: 3,
+        fly: false, ct: 0, x: 1, y: 7, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["itsuki_star_5_ray", "itsuki_meteor", "itsuki_astral_3x10_cannon", "itsuki_grand_feast_nova"]
+      }
+    ];
+  }
+
+  function makeChocoboUnit(kind) {
+    if (kind === "yellow") {
+      return {
+        id: "choco_yellow", name: "チョコボ(黄)", short: "黄", faction: "ally", archetype: "choco_yellow",
+        color: "#ffe047", accent: "#d99b00", eyeColor: "#1e293b",
+        jobId: "chocobo_y", lv: 6, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 148, hp: 148, maxMp: 52, mp: 52, atk: 24, mag: 24, spd: 12, mov: 5, jmp: 4,
+        fly: false, ct: 0, x: 1, y: 2, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["choco_cure", "choco_yellow_rush", "choco_all_heal"]
+      };
+    }
+    if (kind === "black") {
+      return {
+        id: "choco_black", name: "黒チョコボ", short: "黒", faction: "ally", archetype: "choco_black",
+        color: "#4a5568", accent: "#9f7aea", eyeColor: "#facc15",
+        jobId: "chocobo_b", lv: 7, exp: 0, jp: 55, resetUsedThisStage: false,
+        maxHp: 156, hp: 156, maxMp: 64, mp: 64, atk: 28, mag: 32, spd: 13, mov: 5, jmp: 5,
+        fly: true, ct: 0, x: 1, y: 7, alive: true, koCount: 0, lost: false,
+        actedMove: false, actedMain: false,
+        chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+        learned: [],
+        jobPool: ["choco_cure", "choco_black_meteor", "choco_all_heal", "choco_black_sky_barrier"]
+      };
+    }
+    return {
+      id: "choco_red", name: "赤チョコボ", short: "赤", faction: "ally", archetype: "choco_red",
+      color: "#ff4d5a", accent: "#b81d2b", eyeColor: "#fde047",
+      jobId: "chocobo_r", lv: 8, exp: 0, jp: 55, resetUsedThisStage: false,
+      maxHp: 182, hp: 182, maxMp: 75, mp: 75, atk: 35, mag: 36, spd: 13, mov: 5, jmp: 4,
+      fly: false, ct: 0, x: 2, y: 8, alive: true, koCount: 0, lost: false,
+      actedMove: false, actedMain: false,
+      chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+      learned: [],
+      jobPool: ["choco_cure", "choco_red_flare_meteor", "choco_all_heal", "choco_red_overdrive"]
+    };
+  }
+
+  // =========================================================================
+  // 3. STAGES (Stage 2 & Stage 3 feature Instant-Death + Moderate AoE)
+  // =========================================================================
+  function buildStage(stageNum) {
+    const size = 9;
+    const tiles = [];
+    for (let y = 0; y < size; y++) {
+      const row = [];
+      for (let x = 0; x < size; x++) {
+        let type = "grass";
+        let h = 0;
+        let depth = 0;
+
+        if (stageNum === 1) {
+          if ((x >= 3 && x <= 5) || (y === 4 && x >= 2)) type = "stone";
+          else if (x >= 7) { type = "ruin"; h = 2; }
+          else if (x >= 5 && y >= 6) { type = "water"; h = 0; depth = 2; }
+          else if (x === 4 && y === 2) { type = "water"; h = 0; depth = 1; }
+          else type = "grass";
+
+          if (x === 3 && y >= 3 && y <= 5) h = 1;
+          if (x === 4 && y >= 3 && y <= 5) h = 1;
+          if (x >= 7) h = 2;
+          if (depth > 0) h = 0;
+        } else if (stageNum === 2) {
+          if (y >= 7) { type = "water"; h = 0; depth = 2; }
+          else if (y === 6 && x >= 2 && x <= 6) { type = "water"; h = 0; depth = 1; }
+          else if (y === 3 || x === 4) { type = "dirt"; h = 1; }
+          else if (x >= 6 && y <= 3) { type = "stone"; h = 2; }
+          else { type = "dirt"; h = 0; }
+        } else {
+          if (x >= 4 && x <= 5 && y >= 4 && y <= 5) { type = "water"; h = 0; depth = 1; }
+          else if (x >= 6 && y >= 2 && y <= 6) { type = "ruin"; h = 2; }
+          else if (x >= 3 && x <= 5) { type = "stone"; h = 1; }
+          else { type = "ruin"; h = 0; }
+        }
+
+        row.push({ x, y, type, h, depth });
+      }
+      tiles.push(row);
+    }
+
+    const props = [];
+    if (stageNum === 1) {
+      props.push({ x: 6, y: 1, kind: "pillar", h: 1 });
+      props.push({ x: 6, y: 7, kind: "pillar", h: 1 });
+      props.push({ x: 3, y: 1, kind: "bush", h: 0 });
+    } else if (stageNum === 2) {
+      props.push({ x: 5, y: 2, kind: "crate", h: 1 });
+      props.push({ x: 7, y: 1, kind: "crate", h: 2 });
+      props.push({ x: 2, y: 5, kind: "crate", h: 0 });
+    } else {
+      props.push({ x: 7, y: 2, kind: "obelisk", h: 2 });
+      props.push({ x: 7, y: 6, kind: "obelisk", h: 2 });
+      props.push({ x: 3, y: 7, kind: "obelisk", h: 1 });
+    }
+
+    let enemies = [];
+    if (stageNum === 1) {
+      enemies = [
+        makeEnemy("agrias", "アグリアス", "ア", "knight", "#f7d468", "#3b66b0", "#2563eb", 6, 3, 5, 132, 24, 17, 10, 4, 3, true, ["enemy_slash"]),
+        makeEnemy("mustadio", "ムスタディオ", "ム", "archer", "#8b5e3c", "#3e6b48", "#1d4ed8", 7, 5, 5, 114, 23, 15, 11, 4, 3, false, ["enemy_slash"]),
+        makeEnemy("e_templar", "神殿騎士", "殿", "knight", "#94a3b8", "#7f1d1d", "#dc2626", 6, 4, 4, 124, 21, 12, 9, 4, 3, false, ["enemy_slash"]),
+        makeEnemy("e_summoner", "召喚士", "召", "wizard", "#a7f3d0", "#312e81", "#059669", 7, 2, 4, 102, 15, 25, 9, 3, 3, false, ["enemy_holy"])
+      ];
+    } else if (stageNum === 2) {
+      enemies = [
+        makeEnemy("orlandu", "雷神シド", "シ", "sword_saint", "#e2e8f0", "#7c2d12", "#b45309", 6, 3, 8, 225, 42, 32, 12, 5, 4, true, ["enemy_slash", "enemy_aoe_quake", "enemy_instant_death"]),
+        makeEnemy("meliadoul", "メリアドール", "メ", "knight", "#fbcfe8", "#881337", "#be185d", 5, 5, 7, 195, 38, 26, 11, 4, 3, false, ["enemy_slash", "enemy_instant_death"]),
+        makeEnemy("beowulf", "ベイオウーフ", "ベ", "knight", "#fde68a", "#14532d", "#15803d", 5, 1, 7, 190, 36, 30, 11, 4, 3, false, ["enemy_holy", "enemy_aoe_quake"]),
+        makeEnemy("e_ninja", "忍者", "忍", "archer", "#1e293b", "#4c1d95", "#f43f5e", 6, 5, 7, 168, 37, 22, 12, 5, 4, false, ["enemy_slash"]),
+        makeEnemy("e_summoner2", "黒魔導将", "魔", "wizard", "#ddd6fe", "#311042", "#9333ea", 7, 2, 7, 155, 22, 41, 11, 4, 3, false, ["enemy_holy", "enemy_aoe_quake"])
+      ];
+    } else {
+      enemies = [
+        makeEnemy("ramza_boss", "天騎士ラムザ", "ラ", "sword_saint", "#f7d468", "#1e40af", "#2563eb", 6, 4, 11, 310, 52, 44, 13, 5, 4, true, ["enemy_slash", "enemy_instant_death", "enemy_aoe_quake"]),
+        makeEnemy("cloud_boss", "クラウド", "ク", "sword_saint", "#fef08a", "#1e293b", "#15803d", 5, 2, 10, 265, 49, 34, 12, 5, 4, false, ["enemy_slash", "enemy_instant_death"]),
+        makeEnemy("worker8_boss", "労働八号", "八", "iron_giant", "#cbd5e1", "#475569", "#ef4444", 5, 6, 10, 320, 48, 34, 10, 4, 3, false, ["enemy_slash", "enemy_aoe_quake"]),
+        makeEnemy("e_time_mage", "時魔道士", "時", "wizard", "#c4b5fd", "#1e3a8a", "#7c3aed", 6, 6, 10, 205, 26, 50, 12, 4, 3, false, ["enemy_holy", "enemy_instant_death"]),
+        makeEnemy("e_templar3", "聖堂親衛隊", "衛", "knight", "#fca5a5", "#7f1d1d", "#b91c1c", 7, 3, 10, 240, 45, 28, 11, 4, 3, false, ["enemy_slash", "enemy_instant_death"])
+      ];
+    }
+
+    const meta = {
+      1: { num: 1, title: "第1章：オーボンヌ修道院", bgm: "stage1", skyTop: "#1c2d4a", skyBot: "#2c4c3b" },
+      2: { num: 2, title: "第2章：貿易都市ドーター", bgm: "stage2", skyTop: "#1d3557", skyBot: "#3d5a80" },
+      3: { num: 3, title: "最終章：死都ミュロンド", bgm: "stage3", skyTop: "#243454", skyBot: "#3b5278" }
+    }[stageNum];
+
+    return { ...meta, size, tiles, props, enemies };
+  }
+
+  function makeEnemy(id, name, short, jobId, color, accent, eyeColor, x, y, lv, maxHp, atk, mag, spd, mov, jmp, isBoss, skills) {
+    return {
+      id, name, short, faction: "enemy", archetype: id, isBoss,
+      color, accent, eyeColor, jobId, lv,
+      hp: maxHp, maxHp, mp: 100, maxMp: 100, atk, mag, spd, mov, jmp,
+      fly: false, ct: Math.floor(Math.random() * 25), x, y,
+      alive: true, koCount: 0, lost: false, actedMove: false, actedMain: false,
+      chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+      learned: skills || ["enemy_slash"]
+    };
+  }
+
+  // =========================================================================
+  // 4. ADV SCRIPTS
+  // =========================================================================
+  const ADV_SCRIPTS = {
+    op: {
+      tag: "PROLOGUE",
+      bgm: "adv_op",
+      lines: [
+        { speaker: "次郎", charId: "jiro", expr: "tired", text: "……はぁ。40歳、無職、腹囲は立派な大台突破。そんな俺の目の前に、なぜか五つ子の美少女たちが揃っている。" },
+        { speaker: "一花", charId: "ichika", expr: "smug", text: "ふふっ、次郎さんったら朝からため息？ お姉さんが元気注入してあげようか？" },
+        { speaker: "二乃", charId: "nino", expr: "angry", text: "ちょっとアンタ！ いつまでボーっとしてるのよ！ 異世界だかイヴァリースだか知らないけど、あたしたち5人を守る覚悟はあるんでしょうね！" },
+        { speaker: "三玖", charId: "miku", expr: "shy", text: "……次郎、戦国乱世でも奇襲と陣形が大事。……その、私のそばにいてくれると、安心する。" },
+        { speaker: "四葉", charId: "yotsuba", expr: "happy", text: "上杉さん！ みんな一緒なら絶対大丈夫ですっ！ 私が先陣を切って駆け回りますよ〜！" },
+        { speaker: "五月", charId: "itsuki", expr: "determined", text: "上杉くん、油断は禁物です。この世界の騎士たちは手強いと聞いております……まずは腹ごしらえをしてから、いざ出陣です！" },
+        { speaker: "次郎", charId: "jiro", expr: "determined", text: "よし、全員出撃だ！ 肥満体の無職オヤジでも、五つ子ハーレムの盾として泥臭く生き残ってやるぜ！" }
+      ]
+    },
+    s1_op: {
+      tag: "STAGE 1 OP",
+      bgm: "adv_drama",
+      lines: [
+        { speaker: "アグリアス", charId: "agrias", expr: "angry", text: "この修道院の庭に踏み込むとは……！ 礼節も知らぬ輩、聖剣技で退いてもらう！" },
+        { speaker: "次郎", charId: "jiro", expr: "smug", text: "おっと、名門の女騎士さんか。こっちは無職のおじさんと5人の姉妹だ、手加減なしで行くぞ！" }
+      ]
+    },
+    s1_ed: {
+      tag: "STAGE 1 CLEAR",
+      bgm: "adv_op",
+      lines: [
+        { speaker: "四葉", charId: "yotsuba", expr: "happy", text: "わあぁっ！ 黄色いチョコボさんが懐いてきましたよ！ 回復もできるし、騎乗もできそうです！" },
+        { speaker: "五月", charId: "itsuki", expr: "happy", text: "心強い仲間ですね！ 次の貿易都市ドーターは手強そうです……しっかり備えましょう。" },
+        { speaker: "次郎", charId: "jiro", expr: "happy", text: "よし、黄色チョコボが仲間に加わったな！ 次のステージは一気に厳しくなるぞ！" }
+      ]
+    },
+    s2_op: {
+      tag: "STAGE 2 OP",
+      bgm: "adv_drama",
+      lines: [
+        { speaker: "雷神シド", charId: "orlandu", expr: "determined", text: "ふむ……五つ子の姉妹を従えた男か。この地では容赦せぬ。本気でかかってこい！" },
+        { speaker: "二乃", charId: "nino", expr: "angry", text: "雷神だかなんだか知らないけど、あたしたちと次郎の絆を舐めないでよね！" }
+      ]
+    },
+    s2_ed: {
+      tag: "STAGE 2 CLEAR",
+      bgm: "adv_op",
+      lines: [
+        { speaker: "三玖", charId: "miku", expr: "happy", text: "……見て。空を飛ぶ黒チョコボと、真っ赤な赤チョコボが仲間になった……騎乗して戦場を駆けられる。" },
+        { speaker: "一花", charId: "ichika", expr: "smug", text: "これで空も地上もバッチリね。さあ、いよいよ最後の決戦地・死都ミュロンドよ！" }
+      ]
+    },
+    s3_op: {
+      tag: "FINAL STAGE OP",
+      bgm: "adv_drama",
+      lines: [
+        { speaker: "天騎士ラムザ", charId: "ramza_boss", expr: "determined", text: "ここまで勝ち抜いてきた力、見事だ。だがこの聖域を越えるなら、全力で迎え撃つ！" },
+        { speaker: "次郎", charId: "jiro", expr: "determined", text: "ここまで来たら引き返せねえ！ 五つ子とチョコボたち、最後の戦いだ！" }
+      ]
+    },
+    bad_end_jiro: {
+      tag: "BAD END",
+      bgm: "adv_end",
+      lines: [
+        { speaker: "一花", charId: "ichika", expr: "sad", text: "次郎さん……！ 目を覚まして……！" },
+        { speaker: "二乃", charId: "nino", expr: "sad", text: "バカ……！ あんたがいないと、あたしたちどうすればいいのよ……！" },
+        { speaker: "ナレーション", charId: "jiro", expr: "sad", text: "主人公・次郎が永久離脱（ロスト）となった。\n支えを失った一行は戦線を維持できず、物語は幕を閉じた……。\n【BAD END：失われた要】" }
+      ]
+    },
+    bad_end_all_wiped: {
+      tag: "BAD END / RETRY",
+      bgm: "adv_end",
+      lines: [
+        { speaker: "五月", charId: "itsuki", expr: "sad", text: "くっ……力及ばず、全員が倒れてしまいました……！" },
+        { speaker: "次郎", charId: "jiro", expr: "determined", text: "ここで終わるわけにはいかねえ！ 態勢を立て直して、このステージからやり直しだ！" }
+      ]
+    }
+  };
+
+  function buildPermadeathAdv(unit) {
+    if (unit.id === "jiro") {
+      return ADV_SCRIPTS.bad_end_jiro;
+    }
+    const perLine = {
+      ichika: "「……ごめんね、みんな。お姉ちゃん、先に休ませてもらうね……次郎さん、大好きだったよ……」",
+      nino: "「……っ、くやしい……！ もっと次郎と……みんなと一緒にいたかったのに……！」",
+      miku: "「……戦国武将みたいにはいかなかったけど……次郎に会えて、よかった……」",
+      yotsuba: "「……上杉さん、みんなの笑顔……守れましたか？ 最後まで……楽しかったです……」",
+      itsuki: "「……上杉くん、勉強もご飯も……もっと一緒にしたかったのに……無念です……」"
+    };
+    return {
+      tag: "PERMADEATH / LOST",
+      bgm: "adv_drama",
+      lines: [
+        { speaker: "システム", charId: unit.id, expr: "sad", text: `3カウントが経過し、${unit.name}はクリスタルとなって戦場から永久離脱した……！` },
+        { speaker: unit.name, charId: unit.id, expr: "sad", text: perLine[unit.id] || `${unit.name}は力尽き、二度と戦場へ戻れなくなった……` },
+        { speaker: "次郎", charId: "jiro", expr: "angry", text: `くそっ……${unit.name}……！ 俺たちの戦いは、この犠牲を背負ってでも前に進まなきゃならねえ……！` }
+      ]
+    };
+  }
+
+  function buildEndingAdv(roster) {
+    const jiroAlive = roster.some(u => u.id === "jiro" && u.alive && !u.lost);
+    if (!jiroAlive) return ADV_SCRIPTS.bad_end_jiro;
+
+    const aliveSisters = roster.filter(u => ["ichika", "nino", "miku", "yotsuba", "itsuki"].includes(u.id) && u.alive && !u.lost);
+    const count = aliveSisters.length;
+
+    if (count === 5) {
+      return {
+        tag: "TRUE HAREM ENDING",
+        bgm: "adv_end",
+        lines: [
+          { speaker: "天騎士ラムザ", charId: "ramza_boss", expr: "happy", text: "見事だ……この聖域の試練を乗り越えるとは。君たちの絆は本物だ。" },
+          { speaker: "一花", charId: "ichika", expr: "happy", text: "やったね、次郎さん！ 5人そろって最後まで勝ち抜いちゃった♪" },
+          { speaker: "二乃", charId: "nino", expr: "shy", text: "もう、あんたがいないと困るんだからね！ 覚悟しなさいよ、次郎！" },
+          { speaker: "三玖", charId: "miku", expr: "shy", text: "……5人まとめて、責任とってよね。……私も、ずっとそばにいる。" },
+          { speaker: "四葉", charId: "yotsuba", expr: "happy", text: "わーい！ みんな一緒のハッピーエンドですね、上杉さん！" },
+          { speaker: "五月", charId: "itsuki", expr: "happy", text: "上杉くん、本当にお疲れ様でした。これからも……いえ、ずっとよろしくお願いいたします！" },
+          { speaker: "次郎", charId: "jiro", expr: "happy", text: "40歳無職の肥満オヤジが、五つ子全員と迎える最高のハーレム凱旋だ！\n【TRUE END：五等分の花嫁ハーレム戦記 完】" }
+        ]
+      };
+    }
+
+    if (count >= 1) {
+      const names = aliveSisters.map(s => s.name).join("・");
+      return {
+        tag: `SURVIVOR ENDING (${count}/5)`,
+        bgm: "adv_end",
+        lines: [
+          { speaker: "次郎", charId: "jiro", expr: "determined", text: `聖域の戦いは終わった……生き残ってくれた${names}、本当にありがとう。` },
+          { speaker: aliveSisters[0].name, charId: aliveSisters[0].id, expr: "happy", text: "失った仲間の分まで、私たちが次郎さんの力になるわ。もう絶対に離さないから。" },
+          { speaker: "次郎", charId: "jiro", expr: "happy", text: `重たい過去と想いを背負っても、俺たちは前へ進む。\n【ENDING：残された絆とハーレムの誓い（生存姉妹：${names}）】` }
+        ]
+      };
+    }
+
+    return {
+      tag: "SOLO SURVIVOR ENDING",
+      bgm: "adv_end",
+      lines: [
+        { speaker: "次郎", charId: "jiro", expr: "sad", text: "五つ子全員が永久離脱してしまった……聖域に立つのは、俺とチョコボたちだけだ。" },
+        { speaker: "次郎", charId: "jiro", expr: "determined", text: "それでも俺は生き残った。彼女たちの名を胸に刻み、この世界を歩み続ける。\n【ENDING：孤高の生存者】" }
+      ]
+    };
+  }
+
+  // =========================================================================
+  // 5. FULL-SCALE ADV BUST PORTRAITS
+  // =========================================================================
+  function findCharacterProfile(charId) {
+    const inRoster = state.roster.find(r => r.id === charId);
+    if (inRoster) return inRoster;
+    if (state.stage) {
+      const inEnemy = state.stage.enemies.find(e => e.id === charId);
+      if (inEnemy) return inEnemy;
+    }
+    const defaults = {
+      agrias: { id: "agrias", name: "アグリアス", archetype: "agrias", color: "#f7d468", accent: "#3b66b0", eyeColor: "#2563eb" },
+      orlandu: { id: "orlandu", name: "雷神シド", archetype: "orlandu", color: "#e2e8f0", accent: "#7c2d12", eyeColor: "#b45309" },
+      ramza_boss: { id: "ramza_boss", name: "天騎士ラムザ", archetype: "ramza_boss", color: "#f7d468", accent: "#1e40af", eyeColor: "#2563eb" }
+    };
+    return defaults[charId] || { id: "jiro", name: "次郎", archetype: "jiro", color: "#475569", accent: "#334155", eyeColor: "#2d2a26" };
+  }
+
+  function drawAnimeEyes(c, lx, rx, y, r, irisColor, expr) {
+    if (expr === "happy") {
+      c.strokeStyle = "#26171d";
+      c.lineWidth = Math.max(2.6, r * 0.45);
+      c.lineCap = "round";
+      c.beginPath();
+      c.arc(lx, y + r * 0.15, r * 0.94, Math.PI * 1.12, Math.PI * 1.88);
+      c.stroke();
+      c.beginPath();
+      c.arc(rx, y + r * 0.15, r * 0.94, Math.PI * 1.12, Math.PI * 1.88);
+      c.stroke();
+      return;
+    }
+
+    for (const ex of [lx, rx]) {
+      const ey = (expr === "sad" || expr === "tired") ? y + r * 0.18 : y;
+      const eh = (expr === "sad" || expr === "tired") ? r * 0.86 : r * 1.1;
+
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.ellipse(ex, ey, r * 0.98, eh, 0, 0, Math.PI * 2);
+      c.fill();
+
+      c.fillStyle = irisColor;
+      c.beginPath();
+      c.ellipse(ex, ey + r * 0.12, r * 0.62, eh * 0.75, 0, 0, Math.PI * 2);
+      c.fill();
+
+      c.fillStyle = "#151722";
+      c.beginPath();
+      c.arc(ex, ey + r * 0.14, r * 0.28, 0, Math.PI * 2);
+      c.fill();
+
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.arc(ex - r * 0.3, ey - r * 0.28, r * 0.27, 0, Math.PI * 2);
+      c.arc(ex + r * 0.28, ey + r * 0.32, r * 0.14, 0, Math.PI * 2);
+      c.fill();
+
+      c.strokeStyle = "#26171d";
+      c.lineWidth = Math.max(2.3, r * 0.38);
+      c.lineCap = "round";
+      c.beginPath();
+      c.arc(ex, ey, r * 1.0, Math.PI * 1.05, Math.PI * 1.95);
+      c.stroke();
+    }
+  }
+
+  function renderAdvPortrait(charId, expr = "happy") {
+    const pCanvas = document.getElementById("adv-portrait-canvas");
+    if (!pCanvas) return;
+    const c = pCanvas.getContext("2d");
+    const w = pCanvas.width;
+    const h = pCanvas.height;
+    const ch = findCharacterProfile(charId);
+
+    c.clearRect(0, 0, w, h);
+    const bg = c.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, "#2f4169");
+    bg.addColorStop(1, "#101727");
+    c.fillStyle = bg;
+    c.fillRect(0, 0, w, h);
+
+    c.strokeStyle = "rgba(245, 208, 118, 0.22)";
+    c.lineWidth = 3;
+    c.beginPath();
+    c.arc(w * 0.5, h * 0.42, 92, 0, Math.PI * 2);
+    c.stroke();
+
+    if (ch.archetype.startsWith("choco_")) {
+      c.fillStyle = ch.color;
+      c.strokeStyle = "#1e293b";
+      c.lineWidth = 4;
+      c.beginPath();
+      c.ellipse(w * 0.5, h * 0.8, 82, 54, 0, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+
+      c.beginPath();
+      c.roundRect(w * 0.44, h * 0.48, 38, 42, 10);
+      c.fill();
+      c.stroke();
+
+      c.beginPath();
+      c.arc(w * 0.55, h * 0.39, 46, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = ch.accent;
+      c.beginPath();
+      c.moveTo(w * 0.44, h * 0.14);
+      c.lineTo(w * 0.28, h * 0.03);
+      c.lineTo(w * 0.54, h * 0.12);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = "#f59e0b";
+      c.beginPath();
+      c.moveTo(w * 0.86, h * 0.35);
+      c.lineTo(w * 1.1, h * 0.43);
+      c.lineTo(w * 0.86, h * 0.51);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      drawAnimeEyes(c, w * 0.67, w * 0.67, h * 0.37, 12, ch.eyeColor || "#1e293b", expr);
+      return;
+    }
+
+    const isJiro = ch.archetype === "jiro";
+    const skin = isJiro ? "#e8ad82" : "#ffe9de";
+    const hair = ch.color || "#e89888";
+    const iris = ch.eyeColor || "#3b82f6";
+
+    const cx = w * 0.5;
+    const headRx = isJiro ? 60 : 57;
+    const headRy = isJiro ? 56 : 58;
+    const headY = h * 0.38;
+    const neckTop = headY + headRy - 6;
+    const torsoTop = neckTop + 12;
+
+    if (!isJiro) {
+      c.fillStyle = hair;
+      c.strokeStyle = "#26171d";
+      c.lineWidth = 3.5;
+      if (ch.archetype === "nino" || ch.archetype === "itsuki") {
+        c.beginPath();
+        c.moveTo(cx - 58, headY - 12);
+        c.quadraticCurveTo(cx - 76, h * 0.72, cx - 62, h * 0.98);
+        c.lineTo(cx + 62, h * 0.98);
+        c.quadraticCurveTo(cx + 76, h * 0.72, cx + 58, headY - 12);
+        c.closePath();
+        c.fill();
+        c.stroke();
+      } else if (ch.archetype === "miku" || ch.archetype === "yotsuba") {
+        c.beginPath();
+        c.moveTo(cx - 56, headY - 8);
+        c.quadraticCurveTo(cx - 68, h * 0.58, cx - 50, h * 0.78);
+        c.lineTo(cx + 50, h * 0.78);
+        c.quadraticCurveTo(cx + 68, h * 0.58, cx + 56, headY - 8);
+        c.closePath();
+        c.fill();
+        c.stroke();
+      }
+    }
+
+    c.fillStyle = skin;
+    c.strokeStyle = "#26171d";
+    c.lineWidth = 3.5;
+    const neckW = isJiro ? 40 : 26;
+    c.beginPath();
+    c.roundRect(cx - neckW * 0.5, neckTop - 4, neckW, torsoTop - neckTop + 12, 7);
+    c.fill();
+    c.stroke();
+
+    if (isJiro) {
+      c.fillStyle = "#f1f5f9";
+      c.beginPath();
+      c.ellipse(cx, h * 0.95, 114, 72, 0, Math.PI, Math.PI * 2);
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = "#334155";
+      c.beginPath();
+      c.moveTo(cx - 102, h);
+      c.lineTo(cx - 68, torsoTop + 4);
+      c.lineTo(cx - 26, torsoTop + 10);
+      c.lineTo(cx - 34, h);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      c.beginPath();
+      c.moveTo(cx + 102, h);
+      c.lineTo(cx + 68, torsoTop + 4);
+      c.lineTo(cx + 26, torsoTop + 10);
+      c.lineTo(cx + 34, h);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    } else {
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.ellipse(cx, h * 0.96, 98, 66, 0, Math.PI, Math.PI * 2);
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = ch.accent || "#d97852";
+      c.beginPath();
+      c.moveTo(cx - 94, h);
+      c.quadraticCurveTo(cx - 90, torsoTop + 6, cx - 34, torsoTop + 10);
+      c.lineTo(cx, torsoTop + 32);
+      c.lineTo(cx + 34, torsoTop + 10);
+      c.quadraticCurveTo(cx + 90, torsoTop + 6, cx + 94, h);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.moveTo(cx - 30, torsoTop + 2);
+      c.lineTo(cx, torsoTop + 22);
+      c.lineTo(cx + 30, torsoTop + 2);
+      c.lineTo(cx + 20, torsoTop - 4);
+      c.lineTo(cx, torsoTop + 10);
+      c.lineTo(cx - 20, torsoTop - 4);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = hair;
+      c.beginPath();
+      c.moveTo(cx, torsoTop + 15);
+      c.lineTo(cx - 12, torsoTop + 32);
+      c.lineTo(cx, torsoTop + 42);
+      c.lineTo(cx + 12, torsoTop + 32);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+
+    c.fillStyle = skin;
+    c.strokeStyle = "#26171d";
+    c.lineWidth = 3.6;
+    c.beginPath();
+    c.ellipse(cx, headY, headRx, headRy, 0, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+
+    if (!isJiro) {
+      c.fillStyle = hair;
+      c.beginPath();
+      c.arc(cx, headY - 6, headRx + 3, Math.PI * 0.94, Math.PI * 2.06);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      c.beginPath();
+      c.moveTo(cx - 55, headY - 8);
+      c.quadraticCurveTo(cx - 38, headY - 25, cx - 24, headY - 12);
+      c.quadraticCurveTo(cx - 11, headY - 27, cx, headY - 14);
+      c.quadraticCurveTo(cx + 13, headY - 27, cx + 26, headY - 12);
+      c.quadraticCurveTo(cx + 40, headY - 23, cx + 55, headY - 8);
+      c.lineTo(cx + 55, headY - 28);
+      c.lineTo(cx - 55, headY - 28);
+      c.closePath();
+      c.fill();
+
+      if (ch.archetype === "ichika") {
+        c.fillStyle = hair;
+        c.beginPath();
+        c.moveTo(cx + 38, headY - 14);
+        c.quadraticCurveTo(cx + 64, headY + 16, cx + 54, headY + 46);
+        c.lineTo(cx + 40, headY + 38);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        c.fillStyle = "#facc15";
+        c.beginPath();
+        c.arc(cx + 55, headY + 17, 7.5, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+      } else if (ch.archetype === "nino") {
+        c.fillStyle = hair;
+        c.beginPath();
+        c.moveTo(cx - 54, headY - 26);
+        c.quadraticCurveTo(cx - 94, headY + 18, cx - 78, headY + 74);
+        c.quadraticCurveTo(cx - 58, headY + 60, cx - 48, headY - 8);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        c.beginPath();
+        c.moveTo(cx + 54, headY - 26);
+        c.quadraticCurveTo(cx + 94, headY + 18, cx + 78, headY + 74);
+        c.quadraticCurveTo(cx + 58, headY + 60, cx + 48, headY - 8);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        c.fillStyle = "#e879f9";
+        for (const side of [-1, 1]) {
+          const rx = cx + side * 58;
+          const ry = headY - 30;
+          c.beginPath();
+          c.moveTo(rx, ry);
+          c.lineTo(rx + side * 19, ry - 11);
+          c.lineTo(rx + side * 15, ry + 11);
+          c.closePath();
+          c.fill();
+          c.stroke();
+        }
+      } else if (ch.archetype === "miku") {
+        c.strokeStyle = "#2563eb";
+        c.lineWidth = 7.5;
+        c.beginPath();
+        c.arc(cx, headY - 6, headRx + 6, Math.PI * 1.12, Math.PI * 1.88);
+        c.stroke();
+
+        c.fillStyle = "#3b82f6";
+        c.strokeStyle = "#1e3a8a";
+        c.lineWidth = 3;
+        c.beginPath();
+        c.roundRect(cx - 72, headY - 13, 19, 36, 6);
+        c.roundRect(cx + 53, headY - 13, 19, 36, 6);
+        c.fill();
+        c.stroke();
+      } else if (ch.archetype === "yotsuba") {
+        c.fillStyle = "#22c55e";
+        c.strokeStyle = "#14532d";
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(cx, headY - 52);
+        c.quadraticCurveTo(cx - 36, headY - 92, cx - 13, headY - 49);
+        c.quadraticCurveTo(cx + 13, headY - 92, cx + 36, headY - 52);
+        c.closePath();
+        c.fill();
+        c.stroke();
+      } else if (ch.archetype === "itsuki") {
+        c.strokeStyle = hair;
+        c.lineWidth = 6.5;
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(cx, headY - 58);
+        c.quadraticCurveTo(cx + 24, headY - 90, cx + 38, headY - 68);
+        c.stroke();
+
+        c.fillStyle = "#facc15";
+        c.strokeStyle = "#92400e";
+        c.lineWidth = 2;
+        for (const px of [cx - 38, cx + 38]) {
+          c.beginPath();
+          c.arc(px, headY - 15, 8, 0, Math.PI * 2);
+          c.fill();
+          c.stroke();
+        }
+      }
+    } else {
+      c.fillStyle = "#475569";
+      c.beginPath();
+      c.arc(cx, headY - 6, headRx + 2, Math.PI * 0.96, Math.PI * 2.04);
+      c.lineTo(cx + headRx + 1, headY + 12);
+      c.lineTo(cx + headRx - 9, headY + 16);
+      c.lineTo(cx + headRx - 11, headY - 12);
+      c.quadraticCurveTo(cx + 24, headY - 22, cx + 10, headY - 11);
+      c.quadraticCurveTo(cx, headY - 24, cx - 12, headY - 11);
+      c.quadraticCurveTo(cx - 26, headY - 22, cx - headRx + 11, headY - 12);
+      c.lineTo(cx - headRx + 9, headY + 16);
+      c.lineTo(cx - headRx - 1, headY + 12);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+
+    const eyeY = headY + 5;
+    drawAnimeEyes(c, cx - 21, cx + 21, eyeY, isJiro ? 10.5 : 12.5, iris, expr);
+
+    c.strokeStyle = isJiro ? "#334155" : hair;
+    c.lineWidth = 3.6;
+    c.lineCap = "round";
+    if (expr === "angry" || expr === "determined") {
+      c.beginPath();
+      c.moveTo(cx - 32, eyeY - 18);
+      c.lineTo(cx - 11, eyeY - 12);
+      c.moveTo(cx + 32, eyeY - 18);
+      c.lineTo(cx + 11, eyeY - 12);
+      c.stroke();
+    } else if (expr === "sad") {
+      c.beginPath();
+      c.moveTo(cx - 32, eyeY - 12);
+      c.lineTo(cx - 11, eyeY - 18);
+      c.moveTo(cx + 32, eyeY - 12);
+      c.lineTo(cx + 11, eyeY - 18);
+      c.stroke();
+    } else {
+      c.beginPath();
+      c.arc(cx - 21, eyeY - 14, 11, Math.PI * 1.15, Math.PI * 1.85);
+      c.stroke();
+      c.beginPath();
+      c.arc(cx + 21, eyeY - 14, 11, Math.PI * 1.15, Math.PI * 1.85);
+      c.stroke();
+    }
+
+    if (!isJiro && (expr === "happy" || expr === "shy" || expr === "smug")) {
+      c.fillStyle = "rgba(251, 113, 133, 0.45)";
+      c.beginPath();
+      c.ellipse(cx - 27, eyeY + 15, 12, 6, 0, 0, Math.PI * 2);
+      c.ellipse(cx + 27, eyeY + 15, 12, 6, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+
+    const mouthY = headY + 29;
+    c.strokeStyle = "#6e2a36";
+    c.lineWidth = 3.2;
+    if (expr === "happy") {
+      c.fillStyle = "#fb7185";
+      c.beginPath();
+      c.arc(cx, mouthY - 2, 11, 0.15, Math.PI - 0.15);
+      c.fill();
+      c.stroke();
+    } else if (expr === "angry") {
+      c.beginPath();
+      c.moveTo(cx - 11, mouthY + 3);
+      c.lineTo(cx, mouthY - 3);
+      c.lineTo(cx + 11, mouthY + 3);
+      c.stroke();
+    } else if (expr === "sad" || expr === "tired") {
+      c.beginPath();
+      c.arc(cx, mouthY + 7, 9, Math.PI * 1.15, Math.PI * 1.85);
+      c.stroke();
+    } else {
+      c.beginPath();
+      c.arc(cx, mouthY, 8.5, 0.2, Math.PI - 0.2);
+      c.stroke();
+    }
+  }
+
+  // =========================================================================
+  // 6. GAME STATE & ENGINE
+  // =========================================================================
+  const state = {
+    mode: "title",
+    stageNum: 1,
+    stage: null,
+    roster: [],
+    units: [],
+    cursor: { x: 2, y: 4 },
+    activeUnitId: null,
+    phase: "command",
+    pendingSkillId: null,
+    reachableSet: new Set(),
+    targetableSet: new Set(),
+    cam: {
+      rot: 0,
+      zoom: 1.5,
+      panX: 0,
+      panY: 16,
+      follow: true,
+      dragging: false,
+      lastPointerX: 0,
+      lastPointerY: 0,
+      dragMoved: false
+    },
+    anim: {
+      type: null,
+      x: 0,
+      y: 0,
+      dx: 1,
+      dy: 0,
+      color: "#fff",
+      progress: 0,
+      duration: 0.45
+    },
+    popups: [],
+    advQueue: null,
+    advIndex: 0,
+    pendingAfterAdv: null,
+    uiSubmenu: null,
+    toastTimer: null,
+    castTimer: null
+  };
+
+  const canvas = document.getElementById("game-canvas");
+  const ctx = canvas.getContext("2d");
+
+  function showToast(msg, ms = 1600) {
+    const el = document.getElementById("toast-banner");
+    el.textContent = msg;
+    el.classList.add("show");
+    if (state.toastTimer) clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(() => el.classList.remove("show"), ms);
+  }
+
+  function showSkillCastBanner(actorName, title, desc, ms = 1900) {
+    const banner = document.getElementById("skill-cast-banner");
+    document.getElementById("cast-title").textContent = `${actorName}：「${title}」`;
+    document.getElementById("cast-desc").textContent = desc;
+    banner.classList.add("show");
+    if (state.castTimer) clearTimeout(state.castTimer);
+    state.castTimer = setTimeout(() => banner.classList.remove("show"), ms);
+  }
+
+  function addPopup(gx, gy, text, color = "#fff") {
+    state.popups.push({ gx, gy, text, color, life: 1.0 });
+  }
+
+  function triggerAnim(type, gx, gy, color = "#ffd166", dx = 1, dy = 0) {
+    state.anim = { type, x: gx, y: gy, dx, dy, color, progress: 0, duration: 0.46 };
+  }
+
+  function getActiveUnit() {
+    return state.units.find(u => u.id === state.activeUnitId) || null;
+  }
+
+  function isChocoboUnit(u) {
+    return !!(u && u.archetype && u.archetype.startsWith("choco_"));
+  }
+
+  function getBasicAttackRange(u) {
+    if (!u) return 1;
+    if (u.jobId === "archer") return 4;
+    return 1;
+  }
+
+  function getEffectiveStats(u) {
+    const buffMult = (u.buffTurns || 0) > 0 ? 1.3 : 1.0;
+    const mount = u.mountedChocobo;
+    const bonusMov = mount ? 2 : 0;
+    const bonusJmp = mount ? 1 : 0;
+    const fly = !!(u.fly || (mount && mount.fly));
+    return {
+      atk: Math.round(u.atk * buffMult),
+      mag: Math.round(u.mag * buffMult),
+      mov: u.mov + bonusMov,
+      jmp: u.jmp + bonusJmp,
+      fly
+    };
+  }
+
+  function recalcUnitStats(u) {
+    const job = JOBS_DB[u.jobId] || JOBS_DB.squire;
+    const baseAtk = u.baseAtk || u.atk;
+    const baseMag = u.baseMag || u.mag;
+    const baseHp = u.baseHp || u.maxHp;
+    const baseMp = u.baseMp || u.maxMp;
+    u.baseAtk = baseAtk;
+    u.baseMag = baseMag;
+    u.baseHp = baseHp;
+    u.baseMp = baseMp;
+
+    const lvBonus = 1 + (u.lv - 1) * 0.08;
+    u.maxHp = Math.round(baseHp * job.hpMult * lvBonus);
+    u.maxMp = Math.round(baseMp * job.mpMult * (1 + (u.lv - 1) * 0.05));
+    u.atk = Math.round(baseAtk * job.atkMult * lvBonus);
+    u.mag = Math.round(baseMag * job.magMult * lvBonus);
+    u.spd = job.spd;
+    u.mov = job.mov;
+    u.jmp = job.jmp;
+    u.fly = !!job.fly;
+    if (u.hp > u.maxHp) u.hp = u.maxHp;
+    if (u.mp > u.maxMp) u.mp = u.maxMp;
+  }
+
+  function resetStageResetFlagsForAllies() {
+    for (const r of state.roster) {
+      r.resetUsedThisStage = false;
+    }
+    for (const u of state.units) {
+      if (u.faction === "ally") u.resetUsedThisStage = false;
+    }
+  }
+
+  function startNewGame() {
+    sound.ensureContext();
+    sound.seConfirm();
+    state.roster = createInitialRoster();
+    state.roster.forEach(recalcUnitStats);
+    state.stageNum = 1;
+    startAdv(ADV_SCRIPTS.op, () => {
+      startAdv(ADV_SCRIPTS.s1_op, () => {
+        initStageBattle(1);
+      });
+    });
+  }
+
+  function initStageBattle(stageNum) {
+    state.stageNum = stageNum;
+    state.stage = buildStage(stageNum);
+    state.mode = "battle";
+    state.phase = "command";
+    state.uiSubmenu = null;
+    state.pendingSkillId = null;
+    state.reachableSet.clear();
+    state.targetableSet.clear();
+
+    // Each stage allows 1 reset per character
+    resetStageResetFlagsForAllies();
+
+    const activeAllies = state.roster
+      .filter(r => !r.lost)
+      .map((r, idx) => {
+        recalcUnitStats(r);
+        const spawnCoords = [
+          [1, 4], [1, 2], [2, 1], [2, 3], [2, 5], [1, 6],
+          [0, 1], [0, 6], [0, 3]
+        ];
+        const sp = spawnCoords[idx % spawnCoords.length];
+        return {
+          ...r,
+          x: sp[0], y: sp[1],
+          hp: r.maxHp, mp: r.maxMp,
+          ct: idx * 8,
+          alive: true, koCount: 0,
+          actedMove: false, actedMain: false,
+          chargePhys: 1, chargeMag: 1, buffTurns: 0, barrier: 0, mountedChocobo: null,
+          resetUsedThisStage: false
+        };
+      });
+
+    const enemies = state.stage.enemies.map(e => ({ ...e }));
+    state.units = [...activeAllies, ...enemies];
+
+    advanceCtUntilReady();
+    const cur = getActiveUnit();
+    if (cur) {
+      state.cursor = { x: cur.x, y: cur.y };
+      if (state.cam.follow) centerCameraOn(cur.x, cur.y);
+    }
+    sound.playBgm(state.stage.bgm);
+    renderAll();
+  }
+
+  function advanceCtUntilReady() {
+    let guard = 0;
+    while (guard++ < 400) {
+      const ready = state.units
+        .filter(u => !u.lost && u.ct >= 100)
+        .sort((a, b) => b.ct - a.ct);
+      if (ready.length > 0) {
+        const next = ready[0];
+        state.activeUnitId = next.id;
+        next.actedMove = false;
+        next.actedMain = false;
+        if (next.buffTurns && next.buffTurns > 0) next.buffTurns -= 1;
+
+        if (!next.alive) {
+          if (next.faction === "enemy") {
+            next.lost = true;
+            next.ct = 0;
+            continue;
+          }
+
+          next.koCount += 1;
+          addPopup(next.x, next.y, `KOカウント ${next.koCount}/3`, "#ff9d42");
+          sound.seKo();
+          if (next.koCount >= 3) {
+            handlePermadeath(next);
+            return;
+          }
+          next.ct -= 100;
+          continue;
+        }
+
+        if (next.faction === "ally") {
+          state.phase = "command";
+          state.uiSubmenu = null;
+        } else {
+          state.phase = "enemy_turn";
+          setTimeout(() => runEnemyTurn(next), 340);
+        }
+        return;
+      }
+
+      for (const u of state.units) {
+        if (!u.lost) {
+          u.ct += u.spd;
+        }
+      }
+    }
+  }
+
+  function handlePermadeath(unit) {
+    if (unit.faction !== "ally") {
+      unit.lost = true;
+      unit.alive = false;
+      unit.ct = 0;
+      return;
+    }
+
+    unit.lost = true;
+    unit.alive = false;
+    unit.ct = 0;
+    sound.seLoss();
+
+    const rosterEntry = state.roster.find(r => r.id === unit.id);
+    if (rosterEntry) {
+      rosterEntry.lost = true;
+      rosterEntry.alive = false;
+    }
+
+    if (unit.id === "jiro") {
+      resetStageResetFlagsForAllies();
+      startAdv(buildPermadeathAdv(unit), () => {
+        state.mode = "title";
+        openTitleModal();
+      });
+      return;
+    }
+
+    startAdv(buildPermadeathAdv(unit), () => {
+      state.mode = "battle";
+      sound.playBgm(state.stage.bgm);
+      checkBattleEndOrContinue();
+    });
+  }
+
+  // =========================================================================
+  // 7. MOVEMENT, DISTINCT TILE PLACEMENT & TARGET VALIDATION
+  // =========================================================================
+  function tileKey(x, y) { return `${x},${y}`; }
+
+  function isOccupied(x, y, ignoreUnitId = null) {
+    return state.units.some(u => !u.lost && u.id !== ignoreUnitId && u.x === x && u.y === y);
+  }
+
+  function getUnitAt(x, y) {
+    return state.units.find(u => !u.lost && u.x === x && u.y === y) || null;
+  }
+
+  function findDistinctFreeTile(originX, originY, excludeUnitId = null) {
+    const s = state.stage;
+    if (!s) return { x: originX, y: originY };
+    const candidates = [
+      [1, 0], [-1, 0], [0, 1], [0, -1],
+      [1, 1], [1, -1], [-1, 1], [-1, -1],
+      [2, 0], [-2, 0], [0, 2], [0, -2]
+    ];
+    for (const [dx, dy] of candidates) {
+      const nx = originX + dx;
+      const ny = originY + dy;
+      if (nx < 0 || ny < 0 || nx >= s.size || ny >= s.size) continue;
+      if (s.tiles[ny][nx].depth >= 2) continue;
+      if (isOccupied(nx, ny, excludeUnitId)) continue;
+      return { x: nx, y: ny };
+    }
+    for (let y = 0; y < s.size; y++) {
+      for (let x = 0; x < s.size; x++) {
+        if (x === originX && y === originY) continue;
+        if (s.tiles[y][x].depth >= 2) continue;
+        if (!isOccupied(x, y, excludeUnitId)) return { x, y };
+      }
+    }
+    return { x: originX, y: originY };
+  }
+
+  function findAdjacentMountableChocobo(rider) {
+    if (!rider || rider.mountedChocobo || isChocoboUnit(rider)) return null;
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    for (const [dx, dy] of dirs) {
+      const u = getUnitAt(rider.x + dx, rider.y + dy);
+      if (u && u.faction === "ally" && u.alive && !u.lost && isChocoboUnit(u)) {
+        return u;
+      }
+    }
+    return null;
+  }
+
+  function mountChocobo(rider, choco) {
+    if (!rider || !choco || rider.mountedChocobo) return;
+    rider.mountedChocobo = {
+      id: choco.id,
+      name: choco.name,
+      short: choco.short,
+      color: choco.color,
+      accent: choco.accent,
+      fly: !!choco.fly,
+      hp: choco.hp,
+      maxHp: choco.maxHp,
+      mp: choco.mp,
+      maxMp: choco.maxMp,
+      atk: choco.atk,
+      mag: choco.mag,
+      jobPool: [...(choco.jobPool || [])],
+      learned: [...(choco.learned || [])]
+    };
+    choco.lost = true;
+    choco.alive = false;
+    choco.ct = 0;
+    rider.x = choco.x;
+    rider.y = choco.y;
+    rider.actedMove = true;
+    sound.seConfirm();
+    showSkillCastBanner(rider.name, `${choco.name}に騎乗！`, `移動+2／ジャンプ+1${choco.fly ? "／飛行" : ""}＆被弾・即死はチョコボが保護！`);
+    addPopup(rider.x, rider.y, "騎乗！", "#7dd3fc");
+    renderAll();
+  }
+
+  function dismountChocobo(rider, options = { forceAliveChoco: true }) {
+    if (!rider || !rider.mountedChocobo) return;
+    const m = rider.mountedChocobo;
+    const chocoUnit = state.units.find(u => u.id === m.id);
+
+    const riderSpot = findDistinctFreeTile(rider.x, rider.y, rider.id);
+    rider.x = riderSpot.x;
+    rider.y = riderSpot.y;
+
+    if (chocoUnit) {
+      const chocoSpot = findDistinctFreeTile(rider.x, rider.y, chocoUnit.id);
+      chocoUnit.lost = false;
+      chocoUnit.x = chocoSpot.x;
+      chocoUnit.y = chocoSpot.y;
+      chocoUnit.hp = Math.max(0, m.hp);
+      chocoUnit.mp = m.mp;
+      if (options.forceAliveChoco && chocoUnit.hp > 0) {
+        chocoUnit.alive = true;
+        chocoUnit.koCount = 0;
+        chocoUnit.ct = 40;
+      } else {
+        chocoUnit.hp = 0;
+        chocoUnit.alive = false;
+        chocoUnit.koCount = 0;
+        chocoUnit.ct = 20;
+      }
+    }
+
+    rider.mountedChocobo = null;
+    if (options.forceAliveChoco) {
+      sound.seCancel();
+      showToast(`${rider.name} と ${m.name} が別々のマスに降りました`);
+    }
+    renderAll();
+  }
+
+  function computeReachable(unit) {
+    const res = new Set();
+    const s = state.stage;
+    if (!s || !unit) return res;
+    const eff = getEffectiveStats(unit);
+
+    if (eff.fly) {
+      for (let y = 0; y < s.size; y++) {
+        for (let x = 0; x < s.size; x++) {
+          const dist = Math.abs(x - unit.x) + Math.abs(y - unit.y);
+          if (dist <= eff.mov && !isOccupied(x, y, unit.id)) {
+            res.add(tileKey(x, y));
+          }
+        }
+      }
+      return res;
+    }
+
+    const bestRem = new Map();
+    const queue = [{ x: unit.x, y: unit.y, rem: eff.mov }];
+    bestRem.set(tileKey(unit.x, unit.y), eff.mov);
+
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      const curTile = s.tiles[cur.y][cur.x];
+      for (const [dx, dy] of dirs) {
+        const nx = cur.x + dx;
+        const ny = cur.y + dy;
+        if (nx < 0 || ny < 0 || nx >= s.size || ny >= s.size) continue;
+        const nTile = s.tiles[ny][nx];
+        if (nTile.depth >= 2) continue;
+        const propBlocking = s.props.some(p => p.x === nx && p.y === ny && p.kind === "pillar");
+        if (propBlocking) continue;
+
+        const dh = Math.abs(nTile.h - curTile.h);
+        if (dh > eff.jmp) continue;
+
+        const cost = 1 + (nTile.depth === 1 ? 1 : 0);
+        const nRem = cur.rem - cost;
+        if (nRem < 0) continue;
+
+        const k = tileKey(nx, ny);
+        if ((bestRem.get(k) ?? -1) < nRem) {
+          bestRem.set(k, nRem);
+          queue.push({ x: nx, y: ny, rem: nRem });
+        }
+      }
+    }
+
+    for (const k of bestRem.keys()) {
+      const [x, y] = k.split(",").map(Number);
+      if (!isOccupied(x, y, unit.id)) {
+        res.add(k);
+      }
+    }
+    return res;
+  }
+
+  function getCardinalDirTo(actor, tx, ty) {
+    const ddx = tx - actor.x;
+    const ddy = ty - actor.y;
+    if (Math.abs(ddx) >= Math.abs(ddy)) {
+      return { dx: ddx >= 0 ? 1 : -1, dy: 0 };
+    }
+    return { dx: 0, dy: ddy >= 0 ? 1 : -1 };
+  }
+
+  function getAreaTilesForSkill(actor, skill, anchorX, anchorY) {
+    const s = state.stage;
+    const result = [];
+    if (!s || !skill) return result;
+
+    if (skill.scope === "area_3x3") {
+      for (let y = anchorY - 1; y <= anchorY + 1; y++) {
+        for (let x = anchorX - 1; x <= anchorX + 1; x++) {
+          if (x >= 0 && y >= 0 && x < s.size && y < s.size) result.push({ x, y });
+        }
+      }
+      return result;
+    }
+
+    if (skill.scope === "area_5x5") {
+      for (let y = anchorY - 2; y <= anchorY + 2; y++) {
+        for (let x = anchorX - 2; x <= anchorX + 2; x++) {
+          if (x >= 0 && y >= 0 && x < s.size && y < s.size) result.push({ x, y });
+        }
+      }
+      return result;
+    }
+
+    if (skill.scope === "line_pierce") {
+      const { dx, dy } = getCardinalDirTo(actor, anchorX, anchorY);
+      for (let step = 1; step < s.size * 2; step++) {
+        const x = actor.x + dx * step;
+        const y = actor.y + dy * step;
+        if (x < 0 || y < 0 || x >= s.size || y >= s.size) break;
+        result.push({ x, y });
+      }
+      return result;
+    }
+
+    if (skill.scope === "forward_5") {
+      const { dx, dy } = getCardinalDirTo(actor, anchorX, anchorY);
+      for (let step = 1; step <= 5; step++) {
+        const x = actor.x + dx * step;
+        const y = actor.y + dy * step;
+        if (x < 0 || y < 0 || x >= s.size || y >= s.size) break;
+        result.push({ x, y });
+      }
+      return result;
+    }
+
+    if (skill.scope === "forward_3x10") {
+      const { dx, dy } = getCardinalDirTo(actor, anchorX, anchorY);
+      const px = -dy;
+      const py = dx;
+      for (let depth = 1; depth <= 10; depth++) {
+        for (let lateral = -1; lateral <= 1; lateral++) {
+          const x = actor.x + dx * depth + px * lateral;
+          const y = actor.y + dy * depth + py * lateral;
+          if (x < 0 || y < 0 || x >= s.size || y >= s.size) continue;
+          result.push({ x, y });
+        }
+      }
+      return result;
+    }
+
+    return result;
+  }
+
+  function findValidTargets(actor, skill) {
+    const s = state.stage;
+    if (!s || !actor) return [];
+
+    if (!skill) {
+      const atkRange = getBasicAttackRange(actor);
+      const list = [];
+      for (const u of state.units) {
+        if (u.lost || u.id === actor.id || u.faction === actor.faction || !u.alive) continue;
+        const dist = Math.abs(u.x - actor.x) + Math.abs(u.y - actor.y);
+        if (dist > atkRange || dist < 1) continue;
+        const hDiff = Math.abs(s.tiles[u.y][u.x].h - s.tiles[actor.y][actor.x].h);
+        if (hDiff > 2) continue;
+        list.push(u);
+      }
+      return list;
+    }
+
+    const range = skill.range;
+    const scope = skill.scope;
+    const list = [];
+
+    if (scope === "self") {
+      return [actor];
+    }
+    if (scope === "all_ally") {
+      return state.units.filter(u => !u.lost && u.faction === actor.faction && u.alive);
+    }
+    if (scope === "all_enemy") {
+      return state.units.filter(u => !u.lost && u.faction !== actor.faction && u.alive && (Math.abs(u.x - actor.x) + Math.abs(u.y - actor.y)) <= Math.max(range, 3));
+    }
+    if (scope === "all_hazard") {
+      return state.units.filter(u => !u.lost && u.id !== actor.id && u.alive && (Math.abs(u.x - actor.x) + Math.abs(u.y - actor.y)) <= range);
+    }
+
+    // Directional / area skills target valid tiles within range
+    if (["area_3x3", "area_5x5", "line_pierce", "forward_5", "forward_3x10"].includes(scope)) {
+      const tileTargets = [];
+      for (let y = 0; y < s.size; y++) {
+        for (let x = 0; x < s.size; x++) {
+          if (x === actor.x && y === actor.y) continue;
+          const dist = Math.abs(x - actor.x) + Math.abs(y - actor.y);
+          if (dist <= range) {
+            tileTargets.push({ x, y, isTile: true });
+          }
+        }
+      }
+      return tileTargets;
+    }
+
+    for (const u of state.units) {
+      if (u.lost || u.id === actor.id) continue;
+      const dist = Math.abs(u.x - actor.x) + Math.abs(u.y - actor.y);
+      if (dist > range || dist < 1) continue;
+
+      if (scope === "enemy") {
+        if (u.faction !== actor.faction && u.alive) list.push(u);
+      } else if (scope === "ally") {
+        if (u.faction === actor.faction && u.alive) list.push(u);
+      } else if (scope === "ko_ally") {
+        if (u.faction === actor.faction && !u.alive) list.push(u);
+      }
+    }
+    return list;
+  }
+
+  // =========================================================================
+  // 8. COMBAT EXECUTION (Multi-Hit, Line Pierce, Area AoE, Mount Tanking, Self-Destruct)
+  // =========================================================================
+  function beginMoveSelect() {
+    const u = getActiveUnit();
+    if (!u || u.actedMove || !u.alive) {
+      sound.seError();
+      return;
+    }
+    state.reachableSet = computeReachable(u);
+    if (state.reachableSet.size === 0) {
+      sound.seError();
+      showToast("移動できるマスがありません");
+      return;
+    }
+    state.phase = "move_select";
+    state.cursor = { x: u.x, y: u.y };
+    sound.seConfirm();
+    renderAll();
+  }
+
+  function confirmMoveAt(gx, gy) {
+    const u = getActiveUnit();
+    if (!u) return;
+    const k = tileKey(gx, gy);
+    if (!state.reachableSet.has(k) && !(gx === u.x && gy === u.y)) {
+      sound.seError();
+      showToast("そのマスには移動できません");
+      return;
+    }
+    if (gx !== u.x || gy !== u.y) {
+      u.x = gx;
+      u.y = gy;
+      u.actedMove = true;
+      sound.seMove();
+      addPopup(gx, gy, "MOVE", "#a3e635");
+    }
+    state.reachableSet.clear();
+    state.phase = "command";
+    state.uiSubmenu = null;
+    if (state.cam.follow) centerCameraOn(u.x, u.y);
+    renderAll();
+  }
+
+  function startTargetSelection(skillId) {
+    const u = getActiveUnit();
+    if (!u || u.actedMain || !u.alive) {
+      sound.seError();
+      return;
+    }
+
+    const skill = skillId ? ABILITIES_DB[skillId] : null;
+    if (skill && u.mp < skill.costMp) {
+      sound.seError();
+      showToast("MPが足りません！");
+      return;
+    }
+
+    const validTargets = findValidTargets(u, skill);
+    if (validTargets.length === 0) {
+      sound.seError();
+      showToast(skill ? `${skill.name} の射程内に対象がいません` : "射程内に対象がいません");
+      return;
+    }
+
+    if (skill && (skill.scope === "self" || skill.scope === "all_ally" || skill.scope === "all_enemy" || skill.scope === "all_hazard")) {
+      state.pendingSkillId = skillId;
+      state.targetableSet = new Set(validTargets.map(t => tileKey(t.x, t.y)));
+      executeActionOnTarget(validTargets[0].x, validTargets[0].y);
+      return;
+    }
+
+    state.pendingSkillId = skillId;
+    state.targetableSet = new Set(validTargets.map(t => tileKey(t.x, t.y)));
+    state.phase = "target_select";
+    state.uiSubmenu = null;
+
+    if (skill && ["area_3x3", "area_5x5", "line_pierce", "forward_5", "forward_3x10"].includes(skill.scope)) {
+      const enemyInRange = state.units.find(en => !en.lost && en.faction !== u.faction && en.alive && (Math.abs(en.x - u.x) + Math.abs(en.y - u.y)) <= skill.range);
+      if (enemyInRange) {
+        state.cursor = { x: enemyInRange.x, y: enemyInRange.y };
+      } else {
+        const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+        for (const [dx, dy] of dirs) {
+          const nx = u.x + dx;
+          const ny = u.y + dy;
+          if (state.targetableSet.has(tileKey(nx, ny))) {
+            state.cursor = { x: nx, y: ny };
+            break;
+          }
+        }
+      }
+      sound.seConfirm();
+      showToast(`方向・中心マスを選択して「決定」`);
+      renderAll();
+      return;
+    }
+
+    validTargets.sort((a, b) => (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y)));
+    state.cursor = { x: validTargets[0].x, y: validTargets[0].y };
+    sound.seConfirm();
+    showToast(`対象を選択: ${validTargets[0].name} (他${validTargets.length}体)`);
+    renderAll();
+  }
+
+  function executeActionOnTarget(gx, gy) {
+    const actor = getActiveUnit();
+    if (!actor) return;
+    if (!state.targetableSet.has(tileKey(gx, gy))) {
+      sound.seError();
+      showToast("有効な対象・マスを選択してください");
+      return;
+    }
+
+    const target = getUnitAt(gx, gy);
+    const skill = state.pendingSkillId ? ABILITIES_DB[state.pendingSkillId] : null;
+    const eff = getEffectiveStats(actor);
+
+    if (skill && skill.costMp > 0) {
+      actor.mp = Math.max(0, actor.mp - skill.costMp);
+    }
+
+    if (!skill) {
+      if (!target) return;
+      const mult = actor.chargePhys || 1;
+      actor.chargePhys = 1;
+      const rangeLabel = getBasicAttackRange(actor) > 1 ? "遠距離弓" : "通常";
+      showSkillCastBanner(actor.name, "たたかう", mult > 1 ? `溜め効果発動！${rangeLabel}威力${mult.toFixed(1)}倍！` : `${rangeLabel}物理攻撃でダメージを与える。`);
+      sound.seSkill("basic_attack");
+      triggerAnim(getBasicAttackRange(actor) > 1 ? "miku_pierce_arrow" : "slash_arc", target.x, target.y, "#ff7b7b");
+      const raw = Math.max(8, Math.round(eff.atk * (0.9 + Math.random() * 0.25) * mult));
+      applyDamage(actor, target, raw);
+    } else if (skill.id === "jiro_guts_charge") {
+      actor.chargePhys = +((actor.chargePhys || 1) + 0.6).toFixed(2);
+      showSkillCastBanner(actor.name, skill.name, `物理倍率 ${actor.chargePhys.toFixed(1)}倍 に上昇（重複・重ねがけ可能）！`);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, actor.x, actor.y, "#facc15");
+      addPopup(actor.x, actor.y, `溜め ${actor.chargePhys.toFixed(1)}x`, "#facc15");
+    } else if (skill.kind === "charge") {
+      actor.chargePhys = 1.6;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, actor.x, actor.y, "#facc15");
+      addPopup(actor.x, actor.y, "溜め(物1.6x)", "#facc15");
+    } else if (skill.kind === "mag_charge") {
+      actor.chargeMag = 1.65;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, actor.x, actor.y, "#c084fc");
+      addPopup(actor.x, actor.y, "魔力溜め(1.65x)", "#c084fc");
+    } else if (skill.kind === "buff") {
+      if (!target) return;
+      target.buffTurns = (target.buffTurns || 0) + 3;
+      showSkillCastBanner(actor.name, skill.name, `${target.name} の攻魔強化が残り${target.buffTurns}ターンに！`);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#4ade80");
+      addPopup(target.x, target.y, `攻魔UP(${target.buffTurns}T)`, "#4ade80");
+    } else if (skill.kind === "all_buff") {
+      const allies = state.units.filter(u => !u.lost && u.faction === actor.faction && u.alive);
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      for (const al of allies) {
+        al.buffTurns = (al.buffTurns || 0) + 3;
+        triggerAnim(skill.anim, al.x, al.y, "#4ade80");
+        addPopup(al.x, al.y, "攻魔UP", "#4ade80");
+      }
+    } else if (skill.kind === "barrier") {
+      if (!target) return;
+      target.barrier = (target.barrier || 0) + skill.barrierAmt;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#38bdf8");
+      addPopup(target.x, target.y, `バリア+${skill.barrierAmt}`, "#38bdf8");
+    } else if (skill.kind === "all_barrier") {
+      const allies = state.units.filter(u => !u.lost && u.faction === actor.faction && u.alive);
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      for (const al of allies) {
+        al.barrier = (al.barrier || 0) + skill.barrierAmt;
+        triggerAnim(skill.anim, al.x, al.y, "#38bdf8");
+        addPopup(al.x, al.y, `盾+${skill.barrierAmt}`, "#38bdf8");
+      }
+    } else if (skill.kind === "all_heal") {
+      const allies = state.units.filter(u => !u.lost && u.faction === actor.faction && u.alive);
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      for (const al of allies) {
+        const amt = Math.max(18, Math.round(al.maxHp * skill.healPct));
+        al.hp = Math.min(al.maxHp, al.hp + amt);
+        triggerAnim(skill.anim, al.x, al.y, "#4ade80");
+        addPopup(al.x, al.y, `+${amt}`, "#4ade80");
+      }
+    } else if (skill.kind === "all_heal_barrier") {
+      const allies = state.units.filter(u => !u.lost && u.faction === actor.faction && u.alive);
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      for (const al of allies) {
+        const amt = Math.max(22, Math.round(al.maxHp * skill.healPct));
+        al.hp = Math.min(al.maxHp, al.hp + amt);
+        al.barrier = (al.barrier || 0) + skill.barrierAmt;
+        triggerAnim(skill.anim, al.x, al.y, "#fde047");
+        addPopup(al.x, al.y, `+${amt}/盾+${skill.barrierAmt}`, "#fde047");
+      }
+    } else if (skill.kind === "self_destruct_all") {
+      // Hits both enemies and allies in range 2, inflicts mega damage on mounted chocobo, and kills Jiro
+      const mult = actor.chargePhys || 1;
+      actor.chargePhys = 1;
+      const nearby = state.units.filter(u => !u.lost && u.id !== actor.id && u.alive && (Math.abs(u.x - actor.x) + Math.abs(u.y - actor.y)) <= skill.range);
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, actor.x, actor.y, "#ff5722");
+
+      for (const victim of nearby) {
+        triggerAnim("explosion", victim.x, victim.y, "#ff5722");
+        const raw = Math.max(30, Math.round(eff.atk * skill.power * mult));
+        applyDamage(actor, victim, raw);
+      }
+
+      if (actor.mountedChocobo) {
+        const m = actor.mountedChocobo;
+        addPopup(actor.x, actor.y, `${m.short}に超絶自爆！`, "#ff4d5a");
+        dismountChocobo(actor, { forceAliveChoco: false });
+      }
+      actor.barrier = 0;
+      actor.hp = 0;
+      actor.alive = false;
+      actor.koCount = 0;
+      addPopup(actor.x, actor.y, "自爆・即死！", "#ff4d5a");
+    } else if (skill.kind === "multi_phys") {
+      if (!target) return;
+      const hits = skill.hits || 2;
+      const mult = actor.chargePhys || 1;
+      actor.chargePhys = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#fda4af");
+      for (let h = 0; h < hits; h++) {
+        if (!target.alive && !target.mountedChocobo) break;
+        const raw = Math.max(8, Math.round(eff.atk * skill.power * mult));
+        applyDamage(actor, target, raw);
+      }
+    } else if (skill.kind === "line_phys") {
+      const { dx, dy } = getCardinalDirTo(actor, gx, gy);
+      const lineTiles = getAreaTilesForSkill(actor, skill, gx, gy);
+      const mult = actor.chargePhys || 1;
+      actor.chargePhys = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      const endTile = lineTiles[lineTiles.length - 1] || { x: actor.x + dx * 4, y: actor.y + dy * 4 };
+      triggerAnim(skill.anim, endTile.x, endTile.y, "#60a5fa", dx, dy);
+      for (const pt of lineTiles) {
+        const hitUnit = getUnitAt(pt.x, pt.y);
+        if (hitUnit && hitUnit.faction !== actor.faction && hitUnit.alive) {
+          const raw = Math.max(12, Math.round(eff.atk * skill.power * mult));
+          applyDamage(actor, hitUnit, raw);
+        }
+      }
+    } else if (skill.kind === "area_mag") {
+      const { dx, dy } = getCardinalDirTo(actor, gx, gy);
+      const areaTiles = getAreaTilesForSkill(actor, skill, gx, gy);
+      const mult = actor.chargeMag || 1;
+      actor.chargeMag = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, gx, gy, "#f472b6", dx, dy);
+      for (const pt of areaTiles) {
+        const hitUnit = getUnitAt(pt.x, pt.y);
+        if (hitUnit && hitUnit.id !== actor.id && hitUnit.alive) {
+          const raw = Math.max(16, Math.round(eff.mag * skill.power * mult));
+          applyDamage(actor, hitUnit, raw);
+        }
+      }
+    } else if (skill.kind === "all_phys") {
+      const enemies = findValidTargets(actor, skill);
+      const mult = actor.chargePhys || 1;
+      actor.chargePhys = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      for (const en of enemies) {
+        triggerAnim(skill.anim, en.x, en.y, "#ffd166");
+        const raw = Math.max(14, Math.round(eff.atk * skill.power * mult));
+        applyDamage(actor, en, raw);
+      }
+    } else if (skill.kind === "all_mag") {
+      const enemies = findValidTargets(actor, skill);
+      const mult = actor.chargeMag || 1;
+      actor.chargeMag = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      for (const en of enemies) {
+        triggerAnim(skill.anim, en.x, en.y, "#f472b6");
+        const raw = Math.max(16, Math.round(eff.mag * skill.power * mult));
+        applyDamage(actor, en, raw);
+      }
+    } else if (skill.kind === "phys") {
+      if (!target) return;
+      const mult = actor.chargePhys || 1;
+      actor.chargePhys = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#ffd166");
+      const raw = Math.max(10, Math.round(eff.atk * skill.power * mult));
+      applyDamage(actor, target, raw);
+    } else if (skill.kind === "mag") {
+      if (!target) return;
+      const mult = actor.chargeMag || 1;
+      actor.chargeMag = 1;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#72efdd");
+      const raw = Math.max(12, Math.round(eff.mag * skill.power * mult));
+      applyDamage(actor, target, raw);
+    } else if (skill.kind === "instant_death") {
+      if (!target) return;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seDeathSentence();
+      triggerAnim(skill.anim, target.x, target.y, "#a855f7");
+      applyInstantDeath(target);
+    } else if (skill.kind === "heal") {
+      if (!target) return;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#4ade80");
+      const amt = Math.max(18, Math.round(target.maxHp * skill.healPct));
+      target.hp = Math.min(target.maxHp, target.hp + amt);
+      addPopup(target.x, target.y, `+${amt} HP`, "#4ade80");
+    } else if (skill.kind === "revive") {
+      if (!target) return;
+      showSkillCastBanner(actor.name, skill.name, skill.desc);
+      sound.seSkill(skill.id);
+      triggerAnim(skill.anim, target.x, target.y, "#facc15");
+      target.alive = true;
+      target.koCount = 0;
+      target.hp = Math.max(15, Math.round(target.maxHp * skill.reviveHp));
+      addPopup(target.x, target.y, `蘇生 ${target.hp}HP`, "#facc15");
+    }
+
+    actor.actedMain = true;
+    state.targetableSet.clear();
+    state.pendingSkillId = null;
+
+    if (checkBattleEndOrContinue()) return;
+
+    state.phase = "command";
+    if (!actor.alive || (actor.actedMove && actor.actedMain)) {
+      endActiveUnitTurn();
+      return;
+    }
+    renderAll();
+  }
+
+  function applyInstantDeath(defender) {
+    if (!defender || defender.lost || !defender.alive) return;
+    if ((defender.barrier || 0) > 0) {
+      defender.barrier = 0;
+      addPopup(defender.x, defender.y, "盾が砕けた！", "#38bdf8");
+    }
+
+    // Mounted chocobo takes instant death first; rider is dismounted onto a distinct tile
+    if (defender.mountedChocobo) {
+      const m = defender.mountedChocobo;
+      addPopup(defender.x, defender.y, `${m.short}即死保護！`, "#c084fc");
+      dismountChocobo(defender, { forceAliveChoco: false });
+      return;
+    }
+
+    defender.hp = 0;
+    defender.alive = false;
+    defender.koCount = 0;
+    addPopup(defender.x, defender.y, "即死！", "#e879f9");
+  }
+
+  function applyDamage(attacker, defender, dmg) {
+    let rem = dmg;
+    if ((defender.barrier || 0) > 0) {
+      const absorbed = Math.min(defender.barrier, rem);
+      defender.barrier -= absorbed;
+      rem -= absorbed;
+      addPopup(defender.x, defender.y, `盾防-${absorbed}`, "#38bdf8");
+    }
+
+    if (defender.mountedChocobo && rem > 0) {
+      const m = defender.mountedChocobo;
+      if (rem < m.hp) {
+        m.hp -= rem;
+        sound.seHit();
+        addPopup(defender.x, defender.y, `${m.short}被弾-${rem}`, "#7dd3fc");
+        return;
+      } else {
+        const overflow = rem - m.hp;
+        m.hp = 0;
+        sound.seKo();
+        addPopup(defender.x, defender.y, `${m.short}戦闘不能！`, "#ff9d42");
+        dismountChocobo(defender, { forceAliveChoco: false });
+        rem = overflow;
+        if (rem <= 0) return;
+      }
+    }
+
+    defender.hp = Math.max(0, defender.hp - rem);
+    sound.seHit();
+    if (rem > 0) {
+      addPopup(defender.x, defender.y, `-${rem}`, "#ff6b6b");
+    }
+    if (defender.hp <= 0 && defender.alive) {
+      defender.alive = false;
+      defender.koCount = 0;
+      if (defender.faction === "ally") {
+        sound.seKo();
+        addPopup(defender.x, defender.y, "戦闘不能 (3T)", "#ff9d42");
+      }
+    }
+  }
+
+  function endActiveUnitTurn() {
+    const u = getActiveUnit();
+    if (!u) return;
+    u.ct = Math.max(0, u.ct - 100);
+    u.actedMove = false;
+    u.actedMain = false;
+    state.reachableSet.clear();
+    state.targetableSet.clear();
+    state.uiSubmenu = null;
+
+    if (checkBattleEndOrContinue()) return;
+
+    advanceCtUntilReady();
+    const next = getActiveUnit();
+    if (next && next.faction === "ally" && next.alive) {
+      state.cursor = { x: next.x, y: next.y };
+      if (state.cam.follow) centerCameraOn(next.x, next.y);
+    }
+    renderAll();
+  }
+
+  function checkBattleEndOrContinue() {
+    const aliveEnemies = state.units.filter(u => u.faction === "enemy" && !u.lost && u.hp > 0);
+    if (aliveEnemies.length === 0) {
+      sound.seVictory();
+      const stageJpGain = state.stageNum === 1 ? 30 : state.stageNum === 2 ? 35 : 0;
+      if (stageJpGain > 0) {
+        for (const r of state.roster) {
+          if (!r.lost) r.jp += stageJpGain;
+        }
+      }
+
+      if (state.stageNum === 1) {
+        const chocoY = makeChocoboUnit("yellow");
+        recalcUnitStats(chocoY);
+        state.roster.push(chocoY);
+        startAdv(ADV_SCRIPTS.s1_ed, () => {
+          startAdv(ADV_SCRIPTS.s2_op, () => initStageBattle(2));
+        });
+      } else if (state.stageNum === 2) {
+        const chocoB = makeChocoboUnit("black");
+        const chocoR = makeChocoboUnit("red");
+        recalcUnitStats(chocoB);
+        recalcUnitStats(chocoR);
+        state.roster.push(chocoB, chocoR);
+        startAdv(ADV_SCRIPTS.s2_ed, () => {
+          startAdv(ADV_SCRIPTS.s3_op, () => initStageBattle(3));
+        });
+      } else {
+        state.mode = "ending";
+        startAdv(buildEndingAdv(state.roster), () => {
+          state.mode = "title";
+          openTitleModal();
+        });
+      }
+      return true;
+    }
+
+    const jiro = state.units.find(u => u.id === "jiro");
+    if (jiro && jiro.lost) {
+      return true;
+    }
+
+    const aliveAllies = state.units.filter(u => u.faction === "ally" && !u.lost && u.alive);
+    if (aliveAllies.length === 0) {
+      sound.seLoss();
+      resetStageResetFlagsForAllies();
+      startAdv(ADV_SCRIPTS.bad_end_all_wiped, () => {
+        initStageBattle(state.stageNum);
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  function runEnemyTurn(enemy) {
+    if (!enemy || enemy.lost || !enemy.alive || state.mode !== "battle") return;
+
+    const allies = state.units.filter(u => u.faction === "ally" && !u.lost && u.alive);
+    if (allies.length === 0) return;
+
+    allies.sort((a, b) => (Math.abs(a.x - enemy.x) + Math.abs(a.y - enemy.y)) - (Math.abs(b.x - enemy.x) + Math.abs(b.y - enemy.y)));
+    const nearest = allies[0];
+
+    const reach = computeReachable(enemy);
+    let bestTile = { x: enemy.x, y: enemy.y, d: Math.abs(nearest.x - enemy.x) + Math.abs(nearest.y - enemy.y) };
+    for (const k of reach) {
+      const [tx, ty] = k.split(",").map(Number);
+      const d = Math.abs(nearest.x - tx) + Math.abs(nearest.y - ty);
+      if (d < bestTile.d) {
+        bestTile = { x: tx, y: ty, d };
+      }
+    }
+    if (bestTile.x !== enemy.x || bestTile.y !== enemy.y) {
+      enemy.x = bestTile.x;
+      enemy.y = bestTile.y;
+      sound.seMove();
+    }
+
+    const eff = getEffectiveStats(enemy);
+    let chosenSkill = null;
+
+    if (state.stageNum >= 2) {
+      const deathChance = state.stageNum === 3 ? 0.44 : 0.22;
+      const aoeChance = state.stageNum === 3 ? 0.24 : 0.2;
+      const roll = Math.random();
+
+      if (enemy.learned.includes("enemy_instant_death") && enemy.mp >= 12 && roll < deathChance) {
+        const deathTargets = findValidTargets(enemy, ABILITIES_DB.enemy_instant_death);
+        if (deathTargets.length > 0) chosenSkill = ABILITIES_DB.enemy_instant_death;
+      } else if (enemy.learned.includes("enemy_aoe_quake") && enemy.mp >= 10 && roll < deathChance + aoeChance) {
+        const aoeTargets = findValidTargets(enemy, ABILITIES_DB.enemy_aoe_quake);
+        if (aoeTargets.length >= 2) chosenSkill = ABILITIES_DB.enemy_aoe_quake;
+      }
+    }
+
+    if (!chosenSkill && enemy.learned.includes("enemy_holy") && enemy.mp >= 8 && Math.random() < 0.4) {
+      const holyTargets = findValidTargets(enemy, ABILITIES_DB.enemy_holy);
+      if (holyTargets.length > 0) chosenSkill = ABILITIES_DB.enemy_holy;
+    }
+
+    if (chosenSkill && chosenSkill.scope === "all_enemy") {
+      enemy.mp = Math.max(0, enemy.mp - chosenSkill.costMp);
+      const targets = findValidTargets(enemy, chosenSkill);
+      showSkillCastBanner(enemy.name, chosenSkill.name, chosenSkill.desc);
+      sound.seSkill(chosenSkill.id);
+      for (const t of targets) {
+        triggerAnim(chosenSkill.anim, t.x, t.y, "#fb7185");
+        applyDamage(enemy, t, Math.max(14, Math.round(eff.mag * chosenSkill.power)));
+      }
+    } else {
+      const targets = findValidTargets(enemy, chosenSkill);
+      if (targets.length > 0) {
+        const target = targets[0];
+        if (chosenSkill && chosenSkill.kind === "instant_death") {
+          enemy.mp = Math.max(0, enemy.mp - chosenSkill.costMp);
+          showSkillCastBanner(enemy.name, chosenSkill.name, chosenSkill.desc);
+          sound.seDeathSentence();
+          triggerAnim(chosenSkill.anim, target.x, target.y, "#a855f7");
+          applyInstantDeath(target);
+        } else if (chosenSkill && chosenSkill.kind === "mag") {
+          enemy.mp = Math.max(0, enemy.mp - chosenSkill.costMp);
+          showSkillCastBanner(enemy.name, chosenSkill.name, chosenSkill.desc);
+          sound.seSkill("enemy_holy");
+          triggerAnim(chosenSkill.anim, target.x, target.y, "#c084fc");
+          applyDamage(enemy, target, Math.max(14, Math.round(eff.mag * chosenSkill.power)));
+        } else {
+          showSkillCastBanner(enemy.name, "たたかう", "鋭い攻撃で物理ダメージを与える。");
+          sound.seSkill("enemy_slash");
+          triggerAnim("holy_cross", target.x, target.y, "#fb7185");
+          applyDamage(enemy, target, Math.max(12, Math.round(eff.atk * 1.1)));
+        }
+      }
+    }
+
+    if (checkBattleEndOrContinue()) return;
+
+    enemy.ct = Math.max(0, enemy.ct - 100);
+    advanceCtUntilReady();
+    const next = getActiveUnit();
+    if (next && next.faction === "ally" && next.alive) {
+      state.cursor = { x: next.x, y: next.y };
+      if (state.cam.follow) centerCameraOn(next.x, next.y);
+    }
+    renderAll();
+  }
+
+  // =========================================================================
+  // 9. ISOMETRIC 3D CAMERA & FIELD RENDERING (Distinct Anim per Ability)
+  // =========================================================================
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+  }
+
+  function rotateCoords(x, y, size, rot) {
+    if (rot === 0) return { rx: x, ry: y };
+    if (rot === 1) return { rx: y, ry: size - 1 - x };
+    if (rot === 2) return { rx: size - 1 - x, ry: size - 1 - y };
+    return { rx: size - 1 - y, ry: x };
+  }
+
+  function centerCameraOn(gx, gy) {
+    if (!state.stage) return;
+    const { rx, ry } = rotateCoords(gx, gy, state.stage.size, state.cam.rot);
+    const tileW = 54 * state.cam.zoom;
+    const tileH = 28 * state.cam.zoom;
+    const isoX = (rx - ry) * (tileW * 0.5);
+    const isoY = (rx + ry) * (tileH * 0.5);
+    state.cam.panX = -isoX * 0.45;
+    state.cam.panY = 26 - isoY * 0.45;
+  }
+
+  function gridToScreen(gx, gy, h) {
+    const s = state.stage;
+    const { rx, ry } = rotateCoords(gx, gy, s.size, state.cam.rot);
+    const z = state.cam.zoom;
+    const tileW = 58 * z;
+    const tileH = 30 * z;
+    const hStep = 14 * z;
+    const cx = canvas.width * 0.5 + state.cam.panX * z;
+    const cy = canvas.height * 0.24 + state.cam.panY * z;
+    const sx = cx + (rx - ry) * (tileW * 0.5);
+    const sy = cy + (rx + ry) * (tileH * 0.5) - h * hStep;
+    return { sx, sy, tileW, tileH, hStep };
+  }
+
+  function screenToGrid(px, py) {
+    if (!state.stage) return null;
+    const s = state.stage;
+    let best = null;
+    let bestDist = Infinity;
+    for (let y = 0; y < s.size; y++) {
+      for (let x = 0; x < s.size; x++) {
+        const t = s.tiles[y][x];
+        const { sx, sy, tileW, tileH } = gridToScreen(x, y, t.h);
+        const topY = sy + tileH * 0.5;
+        const dx = Math.abs(px - sx) / (tileW * 0.52);
+        const dy = Math.abs(py - topY) / (tileH * 0.65);
+        const d = dx + dy;
+        if (d < 1.05 && d < bestDist) {
+          bestDist = d;
+          best = { x, y };
+        }
+      }
+    }
+    return best;
+  }
+
+  function drawTile(tile, timeSec) {
+    const { sx, sy, tileW, tileH, hStep } = gridToScreen(tile.x, tile.y, tile.h);
+    const halfW = tileW * 0.5;
+    const halfH = tileH * 0.5;
+    const extrusion = Math.max(8 * state.cam.zoom, tile.h * hStep + 10 * state.cam.zoom);
+
+    const palettes = {
+      grass: { top: "#4f8f47", left: "#386b32", right: "#295224", accent: "#78c257" },
+      dirt:  { top: "#a67c52", left: "#7d5a38", right: "#5e4227", accent: "#c79b6d" },
+      stone: { top: "#8c9bb0", left: "#66748a", right: "#495466", accent: "#b8c7db" },
+      water: { top: "#2b7bb9", left: "#1d5887", right: "#143e61", accent: "#74c0fc" },
+      ruin:  { top: "#7c7291", left: "#584f6b", right: "#3e374d", accent: "#a89ec2" }
+    };
+    const pal = palettes[tile.type] || palettes.grass;
+
+    ctx.beginPath();
+    ctx.moveTo(sx - halfW, sy + halfH);
+    ctx.lineTo(sx, sy + tileH);
+    ctx.lineTo(sx, sy + tileH + extrusion);
+    ctx.lineTo(sx - halfW, sy + halfH + extrusion);
+    ctx.closePath();
+    ctx.fillStyle = pal.left;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.28)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(sx + halfW, sy + halfH);
+    ctx.lineTo(sx, sy + tileH);
+    ctx.lineTo(sx, sy + tileH + extrusion);
+    ctx.lineTo(sx + halfW, sy + halfH + extrusion);
+    ctx.closePath();
+    ctx.fillStyle = pal.right;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + halfW, sy + halfH);
+    ctx.lineTo(sx, sy + tileH);
+    ctx.lineTo(sx - halfW, sy + halfH);
+    ctx.closePath();
+    ctx.fillStyle = pal.top;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.stroke();
+
+    ctx.save();
+    ctx.clip();
+    if (tile.type === "grass") {
+      ctx.strokeStyle = pal.accent;
+      ctx.lineWidth = Math.max(1, 1.4 * state.cam.zoom);
+      const blades = [[-0.2, 0.35], [0.15, 0.45], [-0.05, 0.65], [0.22, 0.6]];
+      for (const [bx, by] of blades) {
+        const px = sx + bx * halfW;
+        const py = sy + by * tileH;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px - 3 * state.cam.zoom, py - 5 * state.cam.zoom);
+        ctx.moveTo(px, py);
+        ctx.lineTo(px + 3 * state.cam.zoom, py - 5 * state.cam.zoom);
+        ctx.stroke();
+      }
+      if ((tile.x + tile.y) % 3 === 0) {
+        ctx.fillStyle = "#fff3b0";
+        ctx.beginPath();
+        ctx.arc(sx + 0.1 * halfW, sy + 0.5 * tileH, 2.2 * state.cam.zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (tile.type === "stone" || tile.type === "ruin") {
+      ctx.strokeStyle = pal.accent;
+      ctx.lineWidth = Math.max(1, 1.1 * state.cam.zoom);
+      ctx.beginPath();
+      ctx.moveTo(sx - halfW * 0.5, sy + halfH * 0.5);
+      ctx.lineTo(sx + halfW * 0.5, sy + halfH * 1.5);
+      ctx.moveTo(sx - halfW * 0.5, sy + halfH * 1.5);
+      ctx.lineTo(sx + halfW * 0.5, sy + halfH * 0.5);
+      ctx.stroke();
+    } else if (tile.type === "dirt") {
+      ctx.fillStyle = pal.accent;
+      ctx.beginPath();
+      ctx.arc(sx - 0.18 * halfW, sy + 0.48 * tileH, 2 * state.cam.zoom, 0, Math.PI * 2);
+      ctx.arc(sx + 0.2 * halfW, sy + 0.56 * tileH, 1.6 * state.cam.zoom, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (tile.type === "water") {
+      const wave = Math.sin(timeSec * 3.2 + tile.x * 1.4 + tile.y) * 3 * state.cam.zoom;
+      ctx.strokeStyle = pal.accent;
+      ctx.lineWidth = Math.max(1.2, 1.6 * state.cam.zoom);
+      ctx.beginPath();
+      ctx.moveTo(sx - halfW * 0.45 + wave, sy + halfH);
+      ctx.quadraticCurveTo(sx + wave, sy + halfH - 3 * state.cam.zoom, sx + halfW * 0.45 + wave, sy + halfH);
+      ctx.stroke();
+    }
+
+    const k = tileKey(tile.x, tile.y);
+    if (state.reachableSet.has(k)) {
+      ctx.fillStyle = "rgba(56, 189, 248, 0.36)";
+      ctx.fillRect(sx - halfW, sy, tileW, tileH);
+    }
+    if (state.targetableSet.has(k)) {
+      ctx.fillStyle = "rgba(248, 113, 113, 0.45)";
+      ctx.fillRect(sx - halfW, sy, tileW, tileH);
+    }
+    ctx.restore();
+
+    if (state.cursor.x === tile.x && state.cursor.y === tile.y) {
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + halfW, sy + halfH);
+      ctx.lineTo(sx, sy + tileH);
+      ctx.lineTo(sx - halfW, sy + halfH);
+      ctx.closePath();
+      ctx.strokeStyle = "#f5d076";
+      ctx.lineWidth = Math.max(2, 2.6 * state.cam.zoom);
+      ctx.stroke();
+    }
+  }
+
+  function drawProp(prop) {
+    const tile = state.stage.tiles[prop.y][prop.x];
+    const { sx, sy } = gridToScreen(prop.x, prop.y, tile.h);
+    const z = state.cam.zoom;
+    const baseY = sy + 15 * z;
+
+    if (prop.kind === "pillar" || prop.kind === "obelisk") {
+      const w = 12 * z;
+      const h = (prop.kind === "obelisk" ? 30 : 24) * z;
+      ctx.fillStyle = prop.kind === "obelisk" ? "#5e5478" : "#9aa8bd";
+      ctx.fillRect(sx - w * 0.5, baseY - h, w, h);
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 1.2 * z;
+      ctx.strokeRect(sx - w * 0.5, baseY - h, w, h);
+      ctx.fillStyle = prop.kind === "obelisk" ? "#f472b6" : "#cbd5e1";
+      ctx.fillRect(sx - w * 0.65, baseY - h - 4 * z, w * 1.3, 5 * z);
+    } else if (prop.kind === "crate") {
+      const s = 14 * z;
+      ctx.fillStyle = "#b57c42";
+      ctx.fillRect(sx - s * 0.5, baseY - s, s, s);
+      ctx.strokeStyle = "#4a2e13";
+      ctx.lineWidth = 1.3 * z;
+      ctx.strokeRect(sx - s * 0.5, baseY - s, s, s);
+    } else if (prop.kind === "bush") {
+      ctx.fillStyle = "#2f7a38";
+      ctx.beginPath();
+      ctx.arc(sx, baseY - 7 * z, 9 * z, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawSpriteEyes(cx, cy, z, eyeColor, span = 3.2) {
+    for (const dx of [-span, span]) {
+      const ex = cx + dx * z;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(ex, cy, 2.5 * z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = eyeColor || "#1e293b";
+      ctx.beginPath();
+      ctx.arc(ex, cy, 1.5 * z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(ex - 0.6 * z, cy - 0.6 * z, 0.65 * z, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawUnitSprite(u, timeSec) {
+    if (u.lost) return;
+    if (!u.alive && u.faction === "enemy") return;
+
+    const tile = state.stage.tiles[u.y][u.x];
+    const { sx, sy } = gridToScreen(u.x, u.y, tile.h);
+    const z = state.cam.zoom;
+    const bob = u.alive ? Math.sin(timeSec * 5 + u.x + u.y) * 2.2 * z : 0;
+    const footY = sy + 15 * z;
+    const isActive = u.id === state.activeUnitId && state.mode === "battle";
+
+    ctx.fillStyle = "rgba(0,0,0,0.42)";
+    ctx.beginPath();
+    ctx.ellipse(sx, footY + 1 * z, 13 * z, 6.5 * z, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (isActive) {
+      ctx.strokeStyle = "#f5d076";
+      ctx.lineWidth = 2.2 * z;
+      ctx.beginPath();
+      ctx.ellipse(sx, footY + 1 * z, 15 * z, 7.5 * z, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    if (!u.alive && u.faction === "ally") {
+      ctx.fillStyle = "#67e8f9";
+      ctx.beginPath();
+      ctx.moveTo(sx, footY - 18 * z);
+      ctx.lineTo(sx + 9 * z, footY - 8 * z);
+      ctx.lineTo(sx, footY + 2 * z);
+      ctx.lineTo(sx - 9 * z, footY - 8 * z);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1.3 * z;
+      ctx.stroke();
+
+      ctx.fillStyle = "#ff9d42";
+      ctx.font = `bold ${Math.max(10, Math.round(11 * z))}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(`KO:${3 - u.koCount}`, sx, footY - 22 * z);
+      return;
+    }
+
+    const mountOffset = u.mountedChocobo ? 9 * z : 0;
+    if (u.mountedChocobo) {
+      const m = u.mountedChocobo;
+      ctx.fillStyle = m.color;
+      ctx.beginPath();
+      ctx.ellipse(sx, footY + bob - 7 * z, 13 * z, 8 * z, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 1.4 * z;
+      ctx.stroke();
+    }
+
+    const baseY = footY + bob - mountOffset;
+
+    if (u.archetype.startsWith("choco_")) {
+      ctx.fillStyle = u.color;
+      ctx.beginPath();
+      ctx.ellipse(sx, baseY - 11 * z, 12 * z, 9 * z, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 1.4 * z;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(sx + 7 * z, baseY - 22 * z, 6.5 * z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.moveTo(sx + 13 * z, baseY - 23 * z);
+      ctx.lineTo(sx + 19 * z, baseY - 21 * z);
+      ctx.lineTo(sx + 13 * z, baseY - 19 * z);
+      ctx.closePath();
+      ctx.fill();
+
+      drawSpriteEyes(sx + 7 * z, baseY - 22.5 * z, z, u.eyeColor, 2.2);
+
+      ctx.fillStyle = u.accent;
+      ctx.beginPath();
+      ctx.moveTo(sx - 11 * z, baseY - 13 * z);
+      ctx.lineTo(sx - 18 * z, baseY - 19 * z);
+      ctx.lineTo(sx - 15 * z, baseY - 9 * z);
+      ctx.closePath();
+      ctx.fill();
+    } else if (u.archetype === "jiro") {
+      ctx.fillStyle = "#e2e8f0";
+      ctx.beginPath();
+      ctx.ellipse(sx, baseY - 10 * z, 13.5 * z, 10 * z, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 1.4 * z;
+      ctx.stroke();
+
+      ctx.fillStyle = "#e8ad82";
+      ctx.beginPath();
+      ctx.arc(sx, baseY - 22.5 * z, 7.6 * z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#475569";
+      ctx.beginPath();
+      ctx.arc(sx, baseY - 23.5 * z, 8.0 * z, Math.PI * 0.94, Math.PI * 2.06);
+      ctx.lineTo(sx + 7.8 * z, baseY - 18.5 * z);
+      ctx.lineTo(sx + 5.6 * z, baseY - 18.5 * z);
+      ctx.lineTo(sx + 5.6 * z, baseY - 23.5 * z);
+      ctx.lineTo(sx - 5.6 * z, baseY - 23.5 * z);
+      ctx.lineTo(sx - 5.6 * z, baseY - 18.5 * z);
+      ctx.lineTo(sx - 7.8 * z, baseY - 18.5 * z);
+      ctx.closePath();
+      ctx.fill();
+
+      drawSpriteEyes(sx, baseY - 21.5 * z, z, u.eyeColor, 3.0);
+    } else if (["ichika", "nino", "miku", "yotsuba", "itsuki"].includes(u.archetype)) {
+      if (u.archetype === "nino" || u.archetype === "itsuki") {
+        ctx.fillStyle = u.color;
+        ctx.beginPath();
+        ctx.moveTo(sx - 7 * z, baseY - 23 * z);
+        ctx.lineTo(sx - 9 * z, baseY - 7 * z);
+        ctx.lineTo(sx + 9 * z, baseY - 7 * z);
+        ctx.lineTo(sx + 7 * z, baseY - 23 * z);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.fillStyle = u.accent;
+      ctx.beginPath();
+      ctx.ellipse(sx, baseY - 9 * z, 8.5 * z, 8.5 * z, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 1.3 * z;
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffe8dc";
+      ctx.beginPath();
+      ctx.arc(sx, baseY - 21 * z, 7.2 * z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = u.color;
+      ctx.beginPath();
+      ctx.arc(sx, baseY - 22.5 * z, 7.6 * z, Math.PI * 0.92, Math.PI * 2.08);
+      ctx.fill();
+
+      drawSpriteEyes(sx, baseY - 19.8 * z, z, u.eyeColor, 2.9);
+
+      ctx.fillStyle = "rgba(251, 113, 133, 0.5)";
+      ctx.beginPath();
+      ctx.arc(sx - 4.2 * z, baseY - 17.8 * z, 1.5 * z, 0, Math.PI * 2);
+      ctx.arc(sx + 4.2 * z, baseY - 17.8 * z, 1.5 * z, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (u.archetype === "ichika") {
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.arc(sx + 6.8 * z, baseY - 17.5 * z, 2.2 * z, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (u.archetype === "nino") {
+        ctx.fillStyle = u.color;
+        ctx.beginPath();
+        ctx.ellipse(sx - 9.2 * z, baseY - 15 * z, 3.2 * z, 10 * z, 0.18, 0, Math.PI * 2);
+        ctx.ellipse(sx + 9.2 * z, baseY - 15 * z, 3.2 * z, 10 * z, -0.18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#e879f9";
+        ctx.fillRect(sx - 11.5 * z, baseY - 25 * z, 5 * z, 4 * z);
+        ctx.fillRect(sx + 6.5 * z, baseY - 25 * z, 5 * z, 4 * z);
+      } else if (u.archetype === "miku") {
+        ctx.fillStyle = "#2563eb";
+        ctx.fillRect(sx - 9.5 * z, baseY - 23.5 * z, 4 * z, 7 * z);
+        ctx.fillRect(sx + 5.5 * z, baseY - 23.5 * z, 4 * z, 7 * z);
+      } else if (u.archetype === "yotsuba") {
+        ctx.fillStyle = "#22c55e";
+        ctx.beginPath();
+        ctx.ellipse(sx - 3.2 * z, baseY - 33 * z, 2.3 * z, 5.8 * z, -0.25, 0, Math.PI * 2);
+        ctx.ellipse(sx + 3.2 * z, baseY - 33 * z, 2.3 * z, 5.8 * z, 0.25, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (u.archetype === "itsuki") {
+        ctx.strokeStyle = u.color;
+        ctx.lineWidth = 2 * z;
+        ctx.beginPath();
+        ctx.moveTo(sx, baseY - 29.5 * z);
+        ctx.quadraticCurveTo(sx + 5 * z, baseY - 36 * z, sx + 7 * z, baseY - 31 * z);
+        ctx.stroke();
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.arc(sx - 5.8 * z, baseY - 23.5 * z, 2.1 * z, 0, Math.PI * 2);
+        ctx.arc(sx + 5.8 * z, baseY - 23.5 * z, 2.1 * z, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      if (u.archetype === "iron_giant") {
+        ctx.fillStyle = u.accent;
+        ctx.beginPath();
+        ctx.roundRect(sx - 14 * z, baseY - 24 * z, 28 * z, 22 * z, 5 * z);
+        ctx.fill();
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.5 * z;
+        ctx.stroke();
+
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(sx, baseY - 13 * z, 4 * z, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = u.color;
+        ctx.fillRect(sx - 8 * z, baseY - 32 * z, 16 * z, 9 * z);
+        ctx.strokeRect(sx - 8 * z, baseY - 32 * z, 16 * z, 9 * z);
+        drawSpriteEyes(sx, baseY - 27.5 * z, z, u.eyeColor, 3.2);
+      } else if (u.archetype === "e_ninja" || u.archetype === "e_summoner" || u.archetype === "e_summoner2" || u.archetype === "e_time_mage") {
+        ctx.fillStyle = u.accent;
+        ctx.beginPath();
+        ctx.moveTo(sx - 10 * z, baseY - 2 * z);
+        ctx.lineTo(sx, baseY - 21 * z);
+        ctx.lineTo(sx + 10 * z, baseY - 2 * z);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.3 * z;
+        ctx.stroke();
+
+        ctx.fillStyle = "#fde6d8";
+        ctx.beginPath();
+        ctx.arc(sx, baseY - 21 * z, 6.2 * z, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = u.color;
+        ctx.beginPath();
+        ctx.moveTo(sx - 9 * z, baseY - 23 * z);
+        ctx.lineTo(sx, baseY - 34 * z);
+        ctx.lineTo(sx + 9 * z, baseY - 23 * z);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        drawSpriteEyes(sx, baseY - 20.5 * z, z, u.eyeColor, 2.5);
+      } else {
+        ctx.fillStyle = u.accent;
+        ctx.fillRect(sx - 9.5 * z, baseY - 18 * z, 19 * z, 16 * z);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.4 * z;
+        ctx.strokeRect(sx - 9.5 * z, baseY - 18 * z, 19 * z, 16 * z);
+
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 2.2 * z;
+        ctx.beginPath();
+        ctx.moveTo(sx + 11 * z, baseY - 5 * z);
+        ctx.lineTo(sx + 14 * z, baseY - 26 * z);
+        ctx.stroke();
+
+        ctx.fillStyle = "#fde6d8";
+        ctx.beginPath();
+        ctx.arc(sx, baseY - 23 * z, 6.8 * z, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = u.color;
+        ctx.beginPath();
+        ctx.arc(sx, baseY - 24.5 * z, 7.2 * z, Math.PI * 0.95, Math.PI * 2.05);
+        ctx.fill();
+
+        drawSpriteEyes(sx, baseY - 22.2 * z, z, u.eyeColor, 2.7);
+      }
+    }
+
+    if ((u.barrier || 0) > 0) {
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+      ctx.lineWidth = 2 * z;
+      ctx.beginPath();
+      ctx.arc(sx, baseY - 16 * z, 16 * z, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    const hpRatio = Math.max(0, u.hp / u.maxHp);
+    const bw = 24 * z;
+    const bh = 3.5 * z;
+    const bx = sx - bw * 0.5;
+    const by = baseY - (u.archetype === "iron_giant" ? 39 * z : 35 * z);
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.fillStyle = u.faction === "ally" ? "#38d977" : "#ff5c6c";
+    ctx.fillRect(bx, by, bw * hpRatio, bh);
+  }
+
+  function drawCombatEffect() {
+    const a = state.anim;
+    if (!a.type) return;
+    const tile = state.stage.tiles[a.y]?.[a.x];
+    if (!tile) return;
+    const { sx, sy } = gridToScreen(a.x, a.y, tile.h);
+    const z = state.cam.zoom;
+    const p = a.progress;
+    const cy = sy + 4 * z;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - p);
+
+    switch (a.type) {
+      case "ichika_twin_slash":
+        ctx.strokeStyle = "#fda4af";
+        ctx.lineWidth = 3.5 * z;
+        ctx.beginPath();
+        ctx.arc(sx - 4 * z, cy - 4 * z, (8 + p * 14) * z, -Math.PI * 0.8, Math.PI * 0.3);
+        ctx.stroke();
+        ctx.strokeStyle = "#f43f5e";
+        ctx.lineWidth = 3.5 * z;
+        ctx.beginPath();
+        ctx.arc(sx + 4 * z, cy + 3 * z, (10 + p * 16) * z, Math.PI * 0.1, Math.PI * 1.15);
+        ctx.stroke();
+        break;
+      case "miku_pierce_arrow":
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 4.5 * z;
+        ctx.beginPath();
+        ctx.moveTo(sx - (26 * (1 - p) + 12) * z, cy - (14 * (1 - p) + 6) * z);
+        ctx.lineTo(sx + (10 + p * 16) * z, cy + (6 + p * 9) * z);
+        ctx.stroke();
+        ctx.strokeStyle = "#e0f2fe";
+        ctx.lineWidth = 2 * z;
+        ctx.beginPath();
+        ctx.moveTo(sx - 24 * z, cy - 12 * z);
+        ctx.lineTo(sx + 18 * z, cy + 9 * z);
+        ctx.stroke();
+        break;
+      case "nino_burst_3x3":
+        ctx.strokeStyle = "#fb7185";
+        ctx.lineWidth = 3.5 * z;
+        ctx.beginPath();
+        ctx.ellipse(sx, cy + 6 * z, (16 + p * 22) * z, (9 + p * 12) * z, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(244, 63, 94, 0.35)";
+        ctx.beginPath();
+        ctx.arc(sx, cy, (10 + p * 14) * z, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case "nino_nova_5x5":
+        ctx.strokeStyle = "#e11d48";
+        ctx.lineWidth = 4.5 * z;
+        ctx.beginPath();
+        ctx.ellipse(sx, cy + 6 * z, (24 + p * 34) * z, (13 + p * 18) * z, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "#fde047";
+        ctx.lineWidth = 2.5 * z;
+        ctx.beginPath();
+        ctx.ellipse(sx, cy + 6 * z, (14 + p * 22) * z, (7 + p * 11) * z, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "itsuki_star_5":
+        for (let i = 0; i < 5; i++) {
+          const ox = (i - 2) * 8 * z;
+          const oy = -(1 - p) * 24 * z + (i % 2) * 5 * z;
+          ctx.fillStyle = "#fde047";
+          ctx.beginPath();
+          ctx.arc(sx + ox, cy + oy, 4 * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case "itsuki_cannon_3x10":
+        ctx.fillStyle = "rgba(250, 204, 21, 0.35)";
+        ctx.beginPath();
+        ctx.ellipse(sx, cy + 4 * z, (22 + p * 30) * z, (12 + p * 16) * z, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (14 + p * 24) * z, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "jiro_charge_aura":
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (18 - p * 8) * z, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 2 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (24 - p * 12) * z, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "jiro_self_detonation":
+        ctx.fillStyle = "rgba(239, 68, 68, 0.55)";
+        ctx.beginPath();
+        ctx.arc(sx, cy, (16 + p * 36) * z, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fde047";
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (10 + p * 28) * z, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "death_scythe":
+        ctx.strokeStyle = "#c084fc";
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy - 6 * z, (10 + p * 16) * z, -Math.PI * 0.8, Math.PI * 0.4);
+        ctx.stroke();
+        break;
+      case "slash_arc":
+        ctx.strokeStyle = "#ff7b7b";
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (9 + p * 17) * z, -Math.PI * 0.75, Math.PI * 0.25);
+        ctx.stroke();
+        break;
+      case "belly_slam":
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 4.5 * z;
+        ctx.beginPath();
+        ctx.ellipse(sx, cy + 8 * z, (10 + p * 24) * z, (5 + p * 12) * z, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "holy_cross":
+        ctx.strokeStyle = "#fde047";
+        ctx.lineWidth = 3.5 * z;
+        const len = (10 + p * 18) * z;
+        ctx.beginPath();
+        ctx.moveTo(sx - len, cy - len);
+        ctx.lineTo(sx + len, cy + len);
+        ctx.moveTo(sx + len, cy - len);
+        ctx.lineTo(sx - len, cy + len);
+        ctx.stroke();
+        break;
+      case "spotlight_slash":
+        ctx.strokeStyle = "#f472b6";
+        ctx.lineWidth = 3 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (12 + p * 15) * z, 0, Math.PI * 1.4);
+        ctx.stroke();
+        break;
+      case "flame_burst":
+      case "explosion":
+        ctx.fillStyle = "#ff5722";
+        ctx.beginPath();
+        ctx.arc(sx, cy - p * 8 * z, (12 + p * 18) * z, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.arc(sx, cy - p * 8 * z, (6 + p * 9) * z, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case "shield_dome":
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 3.5 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (10 + p * 14) * z, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "snipe_flash":
+        ctx.strokeStyle = "#60a5fa";
+        ctx.lineWidth = 3.5 * z;
+        ctx.beginPath();
+        ctx.moveTo(sx - 28 * z, cy - 22 * z);
+        ctx.lineTo(sx + 10 * z, cy + 6 * z);
+        ctx.stroke();
+        break;
+      case "clover_heal":
+        ctx.strokeStyle = "#4ade80";
+        ctx.lineWidth = 2.8 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy - p * 16 * z, (8 + p * 13) * z, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "hearts":
+        ctx.fillStyle = "#f472b6";
+        for (let i = 0; i < 4; i++) {
+          const ang = (i / 4) * Math.PI * 2 + p * 2;
+          const hx = sx + Math.cos(ang) * (10 + p * 14) * z;
+          const hy = cy - p * 12 * z + Math.sin(ang) * (7 + p * 9) * z;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 3.5 * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case "star_shower":
+        ctx.fillStyle = "#fde047";
+        for (let i = -1; i <= 1; i++) {
+          const stx = sx + i * 11 * z;
+          const sty = cy - (1 - p) * 24 * z;
+          ctx.beginPath();
+          ctx.arc(stx, sty, 4 * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case "revive_pillar":
+        ctx.fillStyle = "rgba(250, 204, 21, 0.45)";
+        ctx.fillRect(sx - 10 * z, cy - 34 * z, 20 * z, 42 * z);
+        break;
+      case "choco_comet":
+        ctx.fillStyle = "#fb7185";
+        ctx.beginPath();
+        ctx.arc(sx + (1 - p) * 14 * z, cy - (1 - p) * 26 * z, (8 + p * 10) * z, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      default:
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth = 2.5 * z;
+        ctx.beginPath();
+        ctx.arc(sx, cy, (8 + p * 16) * z, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function renderCanvas(timeSec) {
+    resizeCanvas();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!state.stage) {
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, "#121a2e");
+      grad.addColorStop(1, "#090d16");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    const s = state.stage;
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, s.skyTop);
+    grad.addColorStop(1, s.skyBot);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const coords = [];
+    for (let y = 0; y < s.size; y++) {
+      for (let x = 0; x < s.size; x++) {
+        const { rx, ry } = rotateCoords(x, y, s.size, state.cam.rot);
+        coords.push({ x, y, depth: rx + ry, tile: s.tiles[y][x] });
+      }
+    }
+    coords.sort((a, b) => a.depth - b.depth);
+
+    for (const item of coords) {
+      drawTile(item.tile, timeSec);
+    }
+
+    const renderables = [];
+    for (const p of s.props) {
+      const { rx, ry } = rotateCoords(p.x, p.y, s.size, state.cam.rot);
+      renderables.push({ kind: "prop", prop: p, depth: rx + ry + 0.15 });
+    }
+    for (const u of state.units) {
+      if (u.lost) continue;
+      if (!u.alive && u.faction === "enemy") continue;
+      const { rx, ry } = rotateCoords(u.x, u.y, s.size, state.cam.rot);
+      renderables.push({ kind: "unit", unit: u, depth: rx + ry + 0.25 });
+    }
+    renderables.sort((a, b) => a.depth - b.depth);
+
+    for (const r of renderables) {
+      if (r.kind === "prop") drawProp(r.prop);
+      else drawUnitSprite(r.unit, timeSec);
+    }
+
+    drawCombatEffect();
+
+    for (const pop of state.popups) {
+      const tile = s.tiles[pop.y]?.[pop.x];
+      if (!tile) continue;
+      const { sx, sy } = gridToScreen(pop.x, pop.y, tile.h);
+      const z = state.cam.zoom;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, pop.life);
+      ctx.font = `900 ${Math.max(12, Math.round(13 * z))}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.strokeStyle = "#090d16";
+      ctx.lineWidth = 3 * z;
+      const py = sy - 24 * z - (1 - pop.life) * 18 * z;
+      ctx.strokeText(pop.text, sx, py);
+      ctx.fillStyle = pop.color;
+      ctx.fillText(pop.text, sx, py);
+      ctx.restore();
+    }
+  }
+
+  // =========================================================================
+  // 10. HUD & COMMAND DECK
+  // =========================================================================
+  function renderTopHud() {
+    const badge = document.getElementById("stage-badge");
+    if (state.stage) {
+      badge.textContent = `${state.stage.title}`;
+    } else {
+      badge.textContent = "FFT 五等分の花嫁";
+    }
+
+    const dirNames = ["南東", "南西", "北西", "北東"];
+    document.getElementById("zoom-pill").textContent = `ZOOM ${state.cam.zoom.toFixed(1)}x | 視点:${dirNames[state.cam.rot]}`;
+    document.getElementById("pad-dir-label").textContent = dirNames[state.cam.rot];
+
+    const atBar = document.getElementById("at-bar");
+    atBar.innerHTML = "";
+    const sorted = state.units
+      .filter(u => !u.lost && (u.faction === "ally" || u.alive))
+      .slice()
+      .sort((a, b) => {
+        const ta = a.id === state.activeUnitId ? 9999 : (100 - a.ct) / Math.max(1, a.spd);
+        const tb = b.id === state.activeUnitId ? 9999 : (100 - b.ct) / Math.max(1, b.spd);
+        return tb - ta;
+      });
+
+    for (const u of sorted) {
+      const chip = document.createElement("div");
+      chip.className = `at-chip ${u.faction} ${u.id === state.activeUnitId ? "now" : ""} ${!u.alive ? "ko" : ""}`;
+      chip.innerHTML = `<span class="at-dot" style="background:${u.color};"></span><span>${u.short}</span><span class="at-ct">${u.alive ? u.ct : `K${3 - u.koCount}`}</span>`;
+      chip.onclick = () => {
+        state.cursor = { x: u.x, y: u.y };
+        if (state.cam.follow) centerCameraOn(u.x, u.y);
+        sound.seCursor();
+        renderAll();
+      };
+      atBar.appendChild(chip);
+    }
+  }
+
+  function renderUnitCard() {
+    const inspected = getUnitAt(state.cursor.x, state.cursor.y) || getActiveUnit() || state.roster[0];
+    if (!inspected) return;
+
+    const icon = document.getElementById("u-icon");
+    icon.textContent = inspected.short;
+    icon.style.color = inspected.archetype === "jiro" ? "#e2e8f0" : inspected.color;
+    icon.style.borderColor = inspected.archetype === "jiro" ? "#94a3b8" : inspected.color;
+
+    document.getElementById("u-name").textContent = inspected.name;
+    document.getElementById("u-job").textContent = JOBS_DB[inspected.jobId]?.name || inspected.jobId;
+    document.getElementById("u-ct-info").textContent = `CT:${inspected.ct}`;
+
+    const buffEl = document.getElementById("u-buff-tag");
+    const buffs = [];
+    if ((inspected.chargePhys || 1) > 1) buffs.push(`物${inspected.chargePhys.toFixed(1)}x`);
+    if ((inspected.chargeMag || 1) > 1) buffs.push(`魔${inspected.chargeMag.toFixed(1)}x`);
+    if ((inspected.buffTurns || 0) > 0) buffs.push(`強化${inspected.buffTurns}T`);
+    if ((inspected.barrier || 0) > 0) buffs.push(`盾${inspected.barrier}`);
+    if (buffs.length > 0) {
+      buffEl.style.display = "inline-block";
+      buffEl.textContent = buffs.join("/");
+    } else {
+      buffEl.style.display = "none";
+    }
+
+    const mountEl = document.getElementById("u-mount-tag");
+    if (inspected.mountedChocobo) {
+      mountEl.style.display = "inline-block";
+      mountEl.textContent = `騎乗:${inspected.mountedChocobo.short}(HP${inspected.mountedChocobo.hp})`;
+    } else {
+      mountEl.style.display = "none";
+    }
+
+    document.getElementById("u-hp-txt").textContent = `${inspected.hp}/${inspected.maxHp}`;
+    document.getElementById("u-mp-txt").textContent = `${inspected.mp}/${inspected.maxMp}`;
+    const hpPct = Math.max(0, Math.min(100, (inspected.hp / Math.max(1, inspected.maxHp)) * 100));
+    const mpPct = Math.max(0, Math.min(100, (inspected.mp / Math.max(1, inspected.maxMp)) * 100));
+    const hpBar = document.getElementById("u-hp-bar");
+    hpBar.style.width = `${hpPct}%`;
+    hpBar.style.background = hpPct > 50 ? "var(--hp-green)" : hpPct > 25 ? "var(--hp-mid)" : "var(--hp-low)";
+    document.getElementById("u-mp-bar").style.width = `${mpPct}%`;
+
+    const eff = getEffectiveStats(inspected);
+    document.getElementById("u-mov").textContent = eff.mov;
+    document.getElementById("u-jmp").textContent = eff.jmp;
+    document.getElementById("u-jp").textContent = inspected.jp ?? 0;
+
+    const stTag = document.getElementById("u-state-tag");
+    if (inspected.lost) stTag.textContent = "永久離脱";
+    else if (!inspected.alive) stTag.textContent = inspected.faction === "ally" ? `KO残${3 - inspected.koCount}T` : "撃破";
+    else stTag.textContent = inspected.faction === "enemy" ? "敵" : "";
+  }
+
+  function renderCommandDeck() {
+    const panel = document.getElementById("cmd-panel");
+    panel.innerHTML = "";
+    const u = getActiveUnit();
+
+    if (state.mode !== "battle" || !u || u.faction !== "ally" || !u.alive) {
+      panel.innerHTML = `<div style="font-size:11px;color:var(--text-sub);padding:8px;">${state.mode === "battle" ? "敵または待機中の行動を進行中..." : "ADV / メニュー表示中"}</div>`;
+      return;
+    }
+
+    if (state.phase === "move_select") {
+      panel.innerHTML = `<div style="font-size:11.5px;color:var(--gold);font-weight:800;">移動先を選択してください（青マス）</div><div style="font-size:10.5px;color:var(--text-sub);">カーソルで移動先を選び「決定」を押してください。</div>`;
+      return;
+    }
+
+    if (state.phase === "target_select") {
+      const skName = state.pendingSkillId ? ABILITIES_DB[state.pendingSkillId].name : "たたかう";
+      const skDesc = state.pendingSkillId ? ABILITIES_DB[state.pendingSkillId].desc : (getBasicAttackRange(u) > 1 ? "射程4の遠距離弓攻撃でダメージを与える。" : "隣接する敵に物理ダメージを与える。");
+      panel.innerHTML = `<div style="font-size:11.5px;color:#ff8a93;font-weight:800;">「${skName}」の対象・方向を選択（赤マス）</div><div style="font-size:10px;color:#cbd5e1;margin-top:2px;">${skDesc}</div>`;
+      return;
+    }
+
+    if (state.uiSubmenu === "ability") {
+      const backBtn = document.createElement("button");
+      backBtn.className = "skill-item";
+      backBtn.style.background = "#2b1d28";
+      backBtn.innerHTML = `<div class="skill-top"><span>← コマンドへ戻る</span></div>`;
+      backBtn.onclick = () => { state.uiSubmenu = null; sound.seCancel(); renderCommandDeck(); };
+      panel.appendChild(backBtn);
+
+      const list = [...(u.learned || []), ...(u.mountedChocobo ? (u.mountedChocobo.learned || []) : [])];
+      if (list.length === 0) {
+        const empty = document.createElement("div");
+        empty.style.fontSize = "11px";
+        empty.style.padding = "6px";
+        empty.style.color = "#cbd5e1";
+        empty.textContent = "習得済みアビリティがありません（「JP育成」で習得できます）";
+        panel.appendChild(empty);
+      } else {
+        for (const sid of list) {
+          const sk = ABILITIES_DB[sid];
+          if (!sk) continue;
+          const validCount = findValidTargets(u, sk).length;
+          const btn = document.createElement("button");
+          btn.className = "skill-item";
+          btn.disabled = u.actedMain || u.mp < sk.costMp || validCount === 0;
+          btn.innerHTML = `
+            <div class="skill-top"><span>${sk.name} <small style="color:var(--text-sub);">(${validCount}対象/方向)</small></span><span class="skill-cost">MP ${sk.costMp}</span></div>
+            <div class="skill-desc-mini">${sk.desc}</div>
+          `;
+          btn.onclick = () => startTargetSelection(sid);
+          panel.appendChild(btn);
+        }
+      }
+      return;
+    }
+
+    const eff = getEffectiveStats(u);
+    const grid = document.createElement("div");
+    grid.className = "cmd-grid";
+
+    const btnMove = document.createElement("button");
+    btnMove.className = "cmd-btn primary";
+    btnMove.disabled = u.actedMove;
+    btnMove.innerHTML = `<span>いどう</span><span>MOV ${eff.mov}</span>`;
+    btnMove.onclick = beginMoveSelect;
+
+    const hasAtkTarget = findValidTargets(u, null).length > 0;
+    const atkRange = getBasicAttackRange(u);
+    const btnAtk = document.createElement("button");
+    btnAtk.className = "cmd-btn primary";
+    btnAtk.disabled = u.actedMain || !hasAtkTarget;
+    btnAtk.innerHTML = `<span>たたかう</span><span>${atkRange > 1 ? `射${atkRange}` : (hasAtkTarget ? "可" : "対象無")}</span>`;
+    btnAtk.onclick = () => startTargetSelection(null);
+
+    const totalLearned = (u.learned || []).length + (u.mountedChocobo ? (u.mountedChocobo.learned || []).length : 0);
+    const btnAbil = document.createElement("button");
+    btnAbil.className = "cmd-btn";
+    btnAbil.disabled = u.actedMain;
+    btnAbil.innerHTML = `<span>アビリティ</span><span>${totalLearned}</span>`;
+    btnAbil.onclick = () => { state.uiSubmenu = "ability"; sound.seConfirm(); renderCommandDeck(); };
+
+    const btnWait = document.createElement("button");
+    btnWait.className = "cmd-btn";
+    btnWait.innerHTML = `<span>たいき</span><span>CT-100</span>`;
+    btnWait.onclick = () => { sound.seConfirm(); endActiveUnitTurn(); };
+
+    grid.append(btnMove, btnAtk, btnAbil, btnWait);
+
+    const adjChoco = findAdjacentMountableChocobo(u);
+    if (u.mountedChocobo) {
+      const btnDismount = document.createElement("button");
+      btnDismount.className = "cmd-btn";
+      btnDismount.style.gridColumn = "1 / -1";
+      btnDismount.innerHTML = `<span>チョコボから降りる</span><span>${u.mountedChocobo.name}</span>`;
+      btnDismount.onclick = () => dismountChocobo(u, { forceAliveChoco: true });
+      grid.appendChild(btnDismount);
+    } else if (adjChoco) {
+      const btnMount = document.createElement("button");
+      btnMount.className = "cmd-btn";
+      btnMount.style.gridColumn = "1 / -1";
+      btnMount.innerHTML = `<span>${adjChoco.name}に乗る</span><span>MOV+2</span>`;
+      btnMount.onclick = () => mountChocobo(u, adjChoco);
+      grid.appendChild(btnMount);
+    }
+
+    panel.appendChild(grid);
+  }
+
+  function renderAll() {
+    renderTopHud();
+    renderUnitCard();
+    renderCommandDeck();
+  }
+
+  // =========================================================================
+  // 11. INPUT HANDLERS (D-Pad, Keyboard, Camera Drag & Zoom)
+  // =========================================================================
+  function moveCursorByScreenDir(screenDx, screenDy) {
+    if (!state.stage) return;
+    sound.seCursor();
+
+    const rot = state.cam.rot;
+    let gx = 0;
+    let gy = 0;
+    if (rot === 0) {
+      gx = screenDx + screenDy;
+      gy = screenDy - screenDx;
+    } else if (rot === 1) {
+      gx = screenDy - screenDx;
+      gy = -screenDx - screenDy;
+    } else if (rot === 2) {
+      gx = -screenDx - screenDy;
+      gy = screenDx - screenDy;
+    } else {
+      gx = -screenDx + screenDy;
+      gy = screenDx + screenDy;
+    }
+
+    const nx = Math.max(0, Math.min(state.stage.size - 1, state.cursor.x + Math.sign(gx)));
+    const ny = Math.max(0, Math.min(state.stage.size - 1, state.cursor.y + Math.sign(gy)));
+    state.cursor = { x: nx, y: ny };
+    if (state.cam.follow) centerCameraOn(nx, ny);
+    renderAll();
+  }
+
+  function handleConfirmAction() {
+    if (state.mode === "adv") {
+      advanceAdv();
+      return;
+    }
+    if (state.mode !== "battle") return;
+    if (state.phase === "move_select") {
+      confirmMoveAt(state.cursor.x, state.cursor.y);
+    } else if (state.phase === "target_select") {
+      executeActionOnTarget(state.cursor.x, state.cursor.y);
+    } else {
+      const u = getUnitAt(state.cursor.x, state.cursor.y);
+      if (u) {
+        sound.seConfirm();
+        showToast(`${u.name} (${JOBS_DB[u.jobId]?.name || u.jobId}) HP:${u.hp}/${u.maxHp}`);
+      }
+    }
+  }
+
+  function handleCancelAction() {
+    if (state.uiSubmenu) {
+      state.uiSubmenu = null;
+      sound.seCancel();
+      renderCommandDeck();
+      return;
+    }
+    if (state.phase === "move_select" || state.phase === "target_select") {
+      state.phase = "command";
+      state.pendingSkillId = null;
+      state.reachableSet.clear();
+      state.targetableSet.clear();
+      const u = getActiveUnit();
+      if (u) state.cursor = { x: u.x, y: u.y };
+      sound.seCancel();
+      renderAll();
+    }
+  }
+
+  function adjustZoom(delta) {
+    state.cam.zoom = Math.max(0.85, Math.min(2.6, +(state.cam.zoom + delta).toFixed(2)));
+    sound.seCursor();
+    renderTopHud();
+  }
+
+  function rotateCamera() {
+    state.cam.rot = (state.cam.rot + 1) % 4;
+    if (state.cam.follow) centerCameraOn(state.cursor.x, state.cursor.y);
+    sound.seCursor();
+    renderTopHud();
+  }
+
+  function focusCamera() {
+    state.cam.follow = true;
+    const u = getActiveUnit();
+    if (u) state.cursor = { x: u.x, y: u.y };
+    centerCameraOn(state.cursor.x, state.cursor.y);
+    sound.seConfirm();
+    showToast("カメラ追従 ON");
+    renderAll();
+  }
+
+  // =========================================================================
+  // 12. ADV, HELP & JP ROSTER (1 Reset per Character per Stage; Unlocks on BAD END)
+  // =========================================================================
+  function openTitleModal() {
+    state.mode = "title";
+    sound.playBgm("adv_op");
+    document.getElementById("modal-overlay").classList.add("open");
+    document.getElementById("title-card").style.display = "block";
+    document.getElementById("adv-box").style.display = "none";
+    document.getElementById("btn-continue-game").disabled = !localStorage.getItem(SAVE_KEY);
+    renderAll();
+  }
+
+  function startAdv(scriptObj, onDone) {
+    state.mode = "adv";
+    state.advQueue = scriptObj.lines;
+    state.advIndex = 0;
+    state.pendingAfterAdv = onDone || null;
+    sound.playBgm(scriptObj.bgm || "adv_drama");
+
+    document.getElementById("modal-overlay").classList.add("open");
+    document.getElementById("title-card").style.display = "none";
+    document.getElementById("adv-box").style.display = "block";
+    document.getElementById("adv-scene-tag").textContent = scriptObj.tag || "EVENT";
+    showCurrentAdvLine();
+  }
+
+  function showCurrentAdvLine() {
+    const line = state.advQueue[state.advIndex];
+    if (!line) {
+      finishAdv();
+      return;
+    }
+    document.getElementById("adv-speaker").textContent = line.speaker;
+    document.getElementById("adv-text").textContent = line.text;
+    renderAdvPortrait(line.charId || "jiro", line.expr || "happy");
+  }
+
+  function advanceAdv() {
+    sound.seConfirm();
+    state.advIndex += 1;
+    if (state.advIndex >= state.advQueue.length) {
+      finishAdv();
+    } else {
+      showCurrentAdvLine();
+    }
+  }
+
+  function finishAdv() {
+    const cb = state.pendingAfterAdv;
+    state.advQueue = null;
+    state.pendingAfterAdv = null;
+    document.getElementById("modal-overlay").classList.remove("open");
+    document.getElementById("adv-box").style.display = "none";
+    if (cb) cb();
+  }
+
+  function openHelpModal() {
+    sound.seConfirm();
+    const body = document.getElementById("submodal-body");
+    document.getElementById("submodal-heading").textContent = "ジョブ・アビリティ・戦闘ルール ヘルプ";
+    body.innerHTML = `
+      <div class="help-job-card">
+        <div class="help-job-head">弓使いの遠距離「たたかう」＆ 1ステージ1回リセット</div>
+        ・弓使い（三玖）は「たたかう」が射程4の遠距離攻撃になります。<br>
+        ・「JP育成」から各キャラの取得アビリティをリセット（JP全返還）できます。リセットは<strong>ステージごとに各キャラ1回まで</strong>ですが、敗北して<strong>BAD END</strong>になった場合はリセット回数が復活します。
+      </div>
+      <div class="help-job-card">
+        <div class="help-job-head">一花・三玖・二乃・五月の新アビリティ</div>
+        ・一花：<strong>花弁二連斬</strong>（隣接相手に2回連続物理攻撃）／<strong>聖剣技・不動斬</strong>／<strong>盾バリア</strong>／<strong>スターライト演舞</strong><br>
+        ・三玖：<strong>戦国一文字・貫通矢</strong>（4方向直線上のどこまでも貫通する弓攻撃）／<strong>戦国狙撃</strong>／<strong>疾風の軍略バフ</strong>／<strong>天下布武の矢雨</strong><br>
+        ・二乃：<strong>恋焦がれ3×3バースト</strong>（3×3味方巻き込み魔法）／<strong>ツンデレ爆炎</strong>／<strong>紅蓮の5×5ローズ・ノヴァ</strong>（5×5味方巻き込み・全体奥義超え威力）／<strong>業火のツンデレ嵐</strong><br>
+        ・五月：<strong>星屑5連シューティング</strong>（前方5マス味方巻き込み魔法）／<strong>星屑クッキング</strong>／<strong>満腹星辰3×10キャノン</strong>（前方幅3×奥行き10マス味方巻き込み・全体奥義超え威力）／<strong>満腹星辰メテオ</strong>
+      </div>
+      <div class="help-job-card">
+        <div class="help-job-head">次郎の自爆 ＆ チョコボ騎乗・即死保護</div>
+        ・次郎の<strong>捨て身の腹割り自爆</strong>は敵味方問わず周囲2マスに超絶ダメージを与え、<strong>次郎自身は即死</strong>します。チョコボ騎乗中なら<strong>騎乗チョコボにも超絶ダメージ</strong>を与えます。<br>
+        ・チョコボ騎乗中に即死技を受けた場合、<strong>騎乗中のチョコボが即死</strong>し、搭乗者は別マスに降りて即死を免れます。
+      </div>
+    `;
+    document.getElementById("submodal-overlay").classList.add("open");
+  }
+
+  function syncAbilityToActiveBattleUnit(rosterEntry) {
+    const bu = state.units.find(u => u.id === rosterEntry.id);
+    if (bu) {
+      bu.jp = rosterEntry.jp;
+      bu.learned = [...rosterEntry.learned];
+      bu.resetUsedThisStage = !!rosterEntry.resetUsedThisStage;
+    }
+  }
+
+  function openRosterModal() {
+    sound.seConfirm();
+    const body = document.getElementById("submodal-body");
+    document.getElementById("submodal-heading").textContent = "JP育成・アビリティ習得＆リセット（各ステージ各キャラ1回）";
+    body.innerHTML = "";
+
+    for (const r of state.roster) {
+      if (r.lost) continue;
+      const battleUnit = state.units.find(u => u.id === r.id);
+      if (battleUnit) {
+        r.resetUsedThisStage = !!battleUnit.resetUsedThisStage;
+      }
+
+      const row = document.createElement("div");
+      row.className = "roster-row";
+
+      const top = document.createElement("div");
+      top.className = "roster-top";
+
+      const leftInfo = document.createElement("span");
+      leftInfo.textContent = `${r.name} [${JOBS_DB[r.jobId]?.name || r.jobId}] — JP: ${r.jp}`;
+
+      const resetBtn = document.createElement("button");
+      resetBtn.className = "reset-abil-btn";
+      const canReset = (r.learned && r.learned.length > 0) && !r.resetUsedThisStage;
+      resetBtn.disabled = !canReset;
+      resetBtn.textContent = r.resetUsedThisStage ? "リセット済(今ステージ)" : "アビリティリセット";
+      resetBtn.onclick = () => {
+        if (!canReset) {
+          sound.seError();
+          return;
+        }
+        let refunded = 0;
+        for (const sid of r.learned) {
+          const sk = ABILITIES_DB[sid];
+          if (sk) refunded += (sk.jpCost || 0);
+        }
+        r.learned = [];
+        r.jp += refunded;
+        r.resetUsedThisStage = true;
+        syncAbilityToActiveBattleUnit(r);
+        sound.seConfirm();
+        showToast(`${r.name} のアビリティをリセットし ${refunded} JP が戻りました！`);
+        openRosterModal();
+        renderAll();
+      };
+
+      top.append(leftInfo, resetBtn);
+      row.appendChild(top);
+
+      const chipWrap = document.createElement("div");
+      for (const sid of r.jobPool) {
+        const sk = ABILITIES_DB[sid];
+        if (!sk) continue;
+        const isLearned = r.learned.includes(sid);
+        const btn = document.createElement("button");
+        btn.className = `ability-chip-btn ${isLearned ? "learned" : ""}`;
+        btn.disabled = !isLearned && r.jp < sk.jpCost;
+        btn.title = sk.desc;
+        btn.textContent = isLearned ? `✓ ${sk.name}` : `${sk.name} (${sk.jpCost}JP)`;
+        btn.onclick = () => {
+          if (isLearned) {
+            showToast(`${sk.name}: ${sk.desc}`, 2200);
+            return;
+          }
+          if (r.jp < sk.jpCost) {
+            sound.seError();
+            showToast("JPが足りません");
+            return;
+          }
+          r.jp -= sk.jpCost;
+          r.learned.push(sid);
+          syncAbilityToActiveBattleUnit(r);
+          sound.seConfirm();
+          showToast(`${r.name} が「${sk.name}」を習得！`);
+          openRosterModal();
+          renderAll();
+        };
+        chipWrap.appendChild(btn);
+      }
+
+      row.appendChild(chipWrap);
+      body.appendChild(row);
+    }
+
+    document.getElementById("submodal-overlay").classList.add("open");
+  }
+
+  function saveGame() {
+    try {
+      const payload = {
+        stageNum: state.stageNum,
+        roster: state.roster
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      sound.seConfirm();
+      showToast("セーブしました");
+    } catch (e) {
+      sound.seError();
+      showToast("セーブに失敗しました");
+    }
+  }
+
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) {
+        sound.seError();
+        showToast("セーブデータがありません");
+        return;
+      }
+      const data = JSON.parse(raw);
+      state.roster = (data.roster || createInitialRoster()).map(r => {
+        const fresh = createInitialRoster().find(x => x.id === r.id);
+        const base = fresh || r;
+        return {
+          ...base,
+          ...r,
+          resetUsedThisStage: false
+        };
+      });
+      state.roster.forEach(recalcUnitStats);
+      document.getElementById("modal-overlay").classList.remove("open");
+      sound.seConfirm();
+      initStageBattle(data.stageNum || 1);
+      showToast(`第${data.stageNum || 1}章から再開しました`);
+    } catch (e) {
+      sound.seError();
+      showToast("ロードに失敗しました");
+    }
+  }
+
+  function deleteSave() {
+    localStorage.removeItem(SAVE_KEY);
+    sound.seCancel();
+    showToast("セーブデータを削除しました");
+    document.getElementById("btn-continue-game").disabled = true;
+  }
+
+  // =========================================================================
+  // 13. EVENT BINDINGS & MAIN LOOP
+  // =========================================================================
+  function bindEvents() {
+    document.getElementById("btn-new-game").onclick = startNewGame;
+    document.getElementById("btn-continue-game").onclick = loadGame;
+    document.getElementById("btn-title-help").onclick = openHelpModal;
+    document.getElementById("btn-title-del-save").onclick = deleteSave;
+    document.getElementById("btn-help").onclick = openHelpModal;
+    document.getElementById("btn-roster").onclick = openRosterModal;
+    document.getElementById("btn-save").onclick = saveGame;
+    document.getElementById("btn-del-save").onclick = deleteSave;
+
+    document.getElementById("btn-sound").onclick = (e) => {
+      const next = !sound.enabled;
+      sound.setEnabled(next);
+      e.target.textContent = next ? "BGM/SE:ON" : "BGM/SE:OFF";
+      e.target.classList.toggle("active", next);
+    };
+
+    document.getElementById("submodal-close").onclick = () => {
+      sound.seCancel();
+      document.getElementById("submodal-overlay").classList.remove("open");
+    };
+
+    document.getElementById("adv-next-btn").onclick = advanceAdv;
+    document.getElementById("adv-skip-btn").onclick = () => {
+      sound.seCancel();
+      finishAdv();
+    };
+
+    document.getElementById("pad-up").onclick = () => moveCursorByScreenDir(0, -1);
+    document.getElementById("pad-down").onclick = () => moveCursorByScreenDir(0, 1);
+    document.getElementById("pad-left").onclick = () => moveCursorByScreenDir(-1, 0);
+    document.getElementById("pad-right").onclick = () => moveCursorByScreenDir(1, 0);
+    document.getElementById("btn-confirm").onclick = handleConfirmAction;
+    document.getElementById("btn-cancel").onclick = handleCancelAction;
+
+    document.getElementById("cam-zoom-in").onclick = () => adjustZoom(0.2);
+    document.getElementById("cam-zoom-out").onclick = () => adjustZoom(-0.2);
+    document.getElementById("cam-rot").onclick = rotateCamera;
+    document.getElementById("cam-focus").onclick = focusCamera;
+
+    canvas.addEventListener("pointerdown", (e) => {
+      sound.ensureContext();
+      state.cam.dragging = true;
+      state.cam.dragMoved = false;
+      state.cam.lastPointerX = e.clientX;
+      state.cam.lastPointerY = e.clientY;
+    });
+
+    window.addEventListener("pointermove", (e) => {
+      if (!state.cam.dragging) return;
+      const dx = e.clientX - state.cam.lastPointerX;
+      const dy = e.clientY - state.cam.lastPointerY;
+      if (Math.hypot(dx, dy) > 5) {
+        state.cam.dragMoved = true;
+        state.cam.follow = false;
+        state.cam.panX += dx / state.cam.zoom;
+        state.cam.panY += dy / state.cam.zoom;
+        state.cam.lastPointerX = e.clientX;
+        state.cam.lastPointerY = e.clientY;
+      }
+    });
+
+    window.addEventListener("pointerup", (e) => {
+      if (!state.cam.dragging) return;
+      const wasDrag = state.cam.dragMoved;
+      state.cam.dragging = false;
+      if (!wasDrag && state.mode === "battle" && state.stage) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = canvas.width / Math.max(1, rect.width);
+        const px = (e.clientX - rect.left) * dpr;
+        const py = (e.clientY - rect.top) * dpr;
+        const hit = screenToGrid(px, py);
+        if (hit) {
+          state.cursor = { x: hit.x, y: hit.y };
+          sound.seCursor();
+          if (state.phase === "move_select") {
+            confirmMoveAt(hit.x, hit.y);
+          } else if (state.phase === "target_select") {
+            executeActionOnTarget(hit.x, hit.y);
+          } else {
+            renderAll();
+          }
+        }
+      }
+    });
+
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      adjustZoom(e.deltaY < 0 ? 0.15 : -0.15);
+    }, { passive: false });
+
+    window.addEventListener("keydown", (e) => {
+      if (document.getElementById("submodal-overlay").classList.contains("open")) {
+        if (e.key === "Escape") document.getElementById("submodal-close").click();
+        return;
+      }
+      if (state.mode === "adv") {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          advanceAdv();
+        }
+        return;
+      }
+      if (state.mode !== "battle") return;
+
+      switch (e.key) {
+        case "ArrowUp": case "w": case "W":
+          e.preventDefault(); moveCursorByScreenDir(0, -1); break;
+        case "ArrowDown": case "s": case "S":
+          e.preventDefault(); moveCursorByScreenDir(0, 1); break;
+        case "ArrowLeft": case "a": case "A":
+          e.preventDefault(); moveCursorByScreenDir(-1, 0); break;
+        case "ArrowRight": case "d": case "D":
+          e.preventDefault(); moveCursorByScreenDir(1, 0); break;
+        case "Enter": case " ":
+          e.preventDefault(); handleConfirmAction(); break;
+        case "Escape": case "x": case "X":
+          e.preventDefault(); handleCancelAction(); break;
+        case "q": case "Q": case "e": case "E":
+          e.preventDefault(); rotateCamera(); break;
+        case "+": case "=":
+          e.preventDefault(); adjustZoom(0.2); break;
+        case "-": case "_":
+          e.preventDefault(); adjustZoom(-0.2); break;
+        case "f": case "F":
+          e.preventDefault(); focusCamera(); break;
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      renderAll();
+    });
+  }
+
+  let lastFrameTime = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
+
+    if (state.anim.type) {
+      state.anim.progress += dt / state.anim.duration;
+      if (state.anim.progress >= 1) {
+        state.anim.type = null;
+        state.anim.progress = 0;
+      }
+    }
+
+    for (let i = state.popups.length - 1; i >= 0; i--) {
+      state.popups[i].life -= dt * 1.05;
+      if (state.popups[i].life <= 0) state.popups.splice(i, 1);
+    }
+
+    renderCanvas(now / 1000);
+    requestAnimationFrame(loop);
+  }
+
+  bindEvents();
+  state.roster = createInitialRoster();
+  state.roster.forEach(recalcUnitStats);
+  openTitleModal();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
